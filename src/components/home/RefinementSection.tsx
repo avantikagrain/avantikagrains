@@ -165,6 +165,7 @@ export function RefinementSection() {
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
                       className="object-cover object-center"
                       priority
+                      unoptimized
                     />
                   </div>
                   

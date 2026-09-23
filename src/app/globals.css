@@ -1,26 +1,73 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-brand-ivory: #FDFBF7;
+  --color-brand-cream: #F5F1E6;
+  --color-brand-wheat: #E3D2A6;
+  --color-brand-charcoal: #1A1A1A;
+  --color-brand-brown: #3E2723;
+  --color-brand-green: #4A5D23;
+  --color-brand-gold: #C5A059;
+
+  --color-background: var(--color-brand-ivory);
+  --color-foreground: var(--color-brand-charcoal);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-playfair), ui-serif, Georgia, serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@utility container {
+  width: min(100% - 48px, 1200px);
+  margin-inline: auto;
 }
 
-@media (prefers-color-scheme: dark) {
+.container {
+  width: min(100% - 48px, 1200px);
+  margin-inline: auto;
+}
+
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: var(--color-brand-ivory);
+    --foreground: var(--color-brand-charcoal);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      /* While the brief mentions dark sections, the overall default can be dark or light. 
+         Let's stick to the ivory theme globally, and use dark classes for dark sections. */
+      --background: var(--color-brand-charcoal);
+      --foreground: var(--color-brand-ivory);
+    }
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    @apply font-sans antialiased selection:bg-brand-wheat selection:text-brand-charcoal;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif font-medium tracking-tight;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Custom Utilities for GSAP / Smooth Scrolling */
+html {
+  scroll-behavior: auto; /* GSAP smooth scroller or normal depending on implementation */
+}
+
+/* Grain texture overlay */
+.bg-noise {
+  position: relative;
+}
+.bg-noise::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 9999;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
 }

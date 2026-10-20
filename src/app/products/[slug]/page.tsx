@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { getProductBySlug } from "@/data/products";
+import { ProductPurchaseActions } from "@/components/products/ProductPurchaseActions";
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = await params;
@@ -15,7 +16,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     <div data-header-theme="light" className="pt-32 pb-24 bg-[#F9F7F3] min-h-screen">
       <div className="container mx-auto px-6 md:px-12">
         <div className="mb-12">
-          <Link href="/#products" className="inline-flex items-center gap-2 text-sm uppercase tracking-wider text-brand-charcoal hover:text-brand-gold transition-colors">
+          <Link href="/products" className="inline-flex items-center gap-2 text-sm uppercase tracking-wider text-brand-charcoal hover:text-brand-gold transition-colors">
             <ArrowLeft className="w-4 h-4" />
             Back to Products
           </Link>
@@ -23,7 +24,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
           {/* Product Hero Image */}
-          <div className="relative aspect-[4/5] lg:sticky lg:top-32 w-full border border-brand-charcoal/10 overflow-hidden">
+          <div className="relative aspect-[4/5] lg:sticky lg:top-32 w-full border border-brand-charcoal/10 overflow-hidden rounded-2xl shadow-sm">
             <div 
               className="absolute inset-0 bg-cover bg-center"
               style={{ backgroundImage: `url(${product.image})` }}
@@ -34,23 +35,26 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
           {/* Product Details */}
           <div className="flex flex-col">
-            <span className="text-brand-gold font-serif text-sm tracking-widest uppercase mb-4 block">
+            <span className="text-brand-gold font-serif text-sm tracking-widest uppercase mb-4 block font-semibold">
               {product.category}
             </span>
-            <div className="mb-8">
+            <div className="mb-6">
               <h1 className="font-serif text-4xl md:text-6xl text-brand-charcoal uppercase tracking-tight mb-2">
                 {product.name}
               </h1>
               {product.localName && (
                 <span className="text-brand-charcoal/40 font-serif text-2xl md:text-3xl italic">
-                  {product.localName}
+                  ({product.localName})
                 </span>
               )}
             </div>
             
-            <p className="text-brand-charcoal/80 text-lg md:text-xl leading-relaxed mb-12 font-light">
+            <p className="text-brand-charcoal/80 text-lg md:text-xl leading-relaxed mb-8 font-light">
               {product.desc}
             </p>
+
+            {/* Direct Purchase Actions (Add to Cart, Buy Now, Pack Size, Quantity) */}
+            <ProductPurchaseActions product={product} />
 
             {/* Key Features */}
             {product.features && product.features.length > 0 && (

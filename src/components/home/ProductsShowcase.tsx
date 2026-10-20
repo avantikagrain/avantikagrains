@@ -15,13 +15,17 @@ import {
   Sparkles,
   Award,
   Globe,
-  Users
+  Users,
+  ShoppingCart,
+  Check
 } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { products } from "@/data/products";
 import { formatCurrency } from "@/lib/utils";
+import { useCart } from "@/context/CartContext";
+import { useState } from "react";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger, useGSAP);
@@ -42,6 +46,18 @@ const categoryIcons: Record<string, any> = {
 export function ProductsShowcase() {
   const containerRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const { addToCart } = useCart();
+  const [addedSlug, setAddedSlug] = useState<string | null>(null);
+
+  const handleAddToCart = (product: any, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addToCart(product, 1);
+    setAddedSlug(product.slug);
+    setTimeout(() => {
+      setAddedSlug((current) => (current === product.slug ? null : current));
+    }, 2000);
+  };
 
   useGSAP(() => {
     // Elegant stagger reveal of the product cards on scroll
@@ -205,13 +221,38 @@ export function ProductsShowcase() {
                     </p>
                   </div>
 
-                  <Link
-                    href={`/products/${product.slug}`}
-                    className="w-full py-2.5 px-4 rounded-full border border-brand-charcoal/20 group-hover:border-brand-gold group-hover:bg-brand-gold group-hover:text-brand-charcoal text-brand-charcoal/80 text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-300 mt-auto"
-                  >
-                    <span>View Details</span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                  </Link>
+                  <div className="flex items-center gap-2 mt-auto">
+                    <button
+                      onClick={(e) => handleAddToCart(product, e)}
+                      className={`flex-1 py-2.5 px-3 rounded-full border text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all duration-300 ${
+                        addedSlug === product.slug
+                          ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                          : "border-brand-charcoal/20 bg-brand-charcoal text-[#FAF7F2] hover:bg-brand-gold hover:text-brand-charcoal"
+                      }`}
+                      title="Add to Cart"
+                    >
+                      {addedSlug === product.slug ? (
+                        <>
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Added!</span>
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart className="w-3.5 h-3.5" />
+                          <span>Add to Cart</span>
+                        </>
+                      )}
+                    </button>
+
+                    <Link
+                      href={`/products/${product.slug}`}
+                      className="p-2.5 rounded-full border border-brand-charcoal/20 hover:border-brand-gold hover:text-brand-gold text-brand-charcoal/70 transition-colors flex items-center justify-center shrink-0"
+                      title="View Details"
+                      aria-label={`View details for ${product.name}`}
+                    >
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
                 </div>
               </div>
             );

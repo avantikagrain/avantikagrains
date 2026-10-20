@@ -17,13 +17,13 @@ export default function AboutPage() {
 
         <article className="prose prose-lg md:prose-xl prose-stone mx-auto text-brand-charcoal/80">
           <p className="font-serif text-2xl leading-relaxed text-brand-charcoal mb-12">
-            [COMPANY STORY PLACEHOLDER] At Avantika Grain Mills, our heritage is rooted in the rich agricultural landscapes where the finest grains are grown. We believe that true quality starts at the source.
+            At Avantika Grain Mills, our heritage is rooted in the rich agricultural landscapes where the finest grains are grown. We believe that true quality starts at the source.
           </p>
-          
+
           <p>
-            [CMS CONTENT PLACEHOLDER] Our journey began with a simple mission: to bridge the gap between traditional agricultural wisdom and modern manufacturing precision. Over the years, we have invested heavily in state-of-the-art European milling technology to ensure that every grain we process meets the highest global standards.
+            Our journey began with a simple mission: to bridge the gap between traditional agricultural wisdom and modern manufacturing precision. Over the years, we have invested heavily in state-of-the-art European milling technology to ensure that every grain we process meets the highest global standards.
           </p>
-          
+
           <h2 className="font-serif text-3xl text-brand-charcoal mt-16 mb-6 uppercase tracking-wider">Vision & Values</h2>
           <p>
             We don&apos;t just mill grains; we refine what goes into every product. Our commitment to consistency, purity, and reliability has made us a trusted partner for retail brands, bakeries, and food manufacturers across the globe.

@@ -180,18 +180,34 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Menu Toggle */}
-        <button
-          className="md:hidden z-50 p-2 transition-colors duration-300"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          aria-label="Toggle Menu"
-        >
-          {isMobileMenuOpen ? (
-            <X className="w-6 h-6 text-brand-ivory" />
-          ) : (
-            <Menu className="w-6 h-6" />
-          )}
-        </button>
+        {/* Mobile Icons & Menu Toggle */}
+        <div className="flex md:hidden items-center gap-4 z-50">
+          <Link 
+            href="/cart"
+            className={cn("relative p-1.5 transition-colors duration-300", hoverTextColorClass)}
+            title="Cart"
+            aria-label="Shopping Cart"
+          >
+            <ShoppingCart className="w-5 h-5" />
+            {totalItems > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-brand-gold text-brand-charcoal text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow">
+                {totalItems}
+              </span>
+            )}
+          </Link>
+
+          <button
+            className="p-1.5 transition-colors duration-300"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Toggle Menu"
+          >
+            {isMobileMenuOpen ? (
+              <X className="w-6 h-6 text-brand-ivory" />
+            ) : (
+              <Menu className="w-6 h-6" />
+            )}
+          </button>
+        </div>
       </div>
     </header>
 
@@ -202,32 +218,50 @@ export function Navbar() {
           isMobileMenuOpen ? "translate-y-0 pointer-events-auto" : "-translate-y-full pointer-events-none"
         )}
       >
-        <nav className="flex flex-col gap-8">
+        <nav className="flex flex-col gap-6">
           {navLinks.map((link, index) => (
             <Link
               key={link.name}
               href={link.href}
               onClick={() => setIsMobileMenuOpen(false)}
               className={cn(
-                "font-serif text-4xl text-brand-ivory hover:text-brand-gold transition-all duration-500 transform",
+                "font-serif text-3xl text-brand-ivory hover:text-brand-gold transition-all duration-500 transform",
                 isMobileMenuOpen ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
               )}
-              style={{ transitionDelay: `${index * 100 + 300}ms` }}
+              style={{ transitionDelay: `${index * 80 + 200}ms` }}
             >
               {link.name}
             </Link>
           ))}
-          <Link
-            href="/contact"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className={cn(
-              "font-serif text-4xl text-brand-gold hover:text-brand-ivory transition-all duration-500 transform mt-8",
-              isMobileMenuOpen ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
-            )}
-            style={{ transitionDelay: `${navLinks.length * 100 + 300}ms` }}
-          >
-            Let&apos;s Talk
-          </Link>
+
+          <div className="pt-4 border-t border-brand-ivory/10 flex flex-col gap-4">
+            <Link
+              href="/cart"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="font-serif text-2xl text-brand-gold hover:text-brand-ivory transition-colors flex items-center justify-between"
+            >
+              <span>Cart</span>
+              <span className="text-xs uppercase tracking-widest px-2.5 py-1 rounded-full bg-brand-gold/20 text-brand-gold font-sans font-bold">
+                {totalItems} {totalItems === 1 ? "Item" : "Items"}
+              </span>
+            </Link>
+
+            <Link
+              href={isAuthenticated ? "/account" : "/account/login"}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="font-serif text-2xl text-brand-ivory/80 hover:text-brand-gold transition-colors"
+            >
+              {isAuthenticated ? "My Account" : "Login / Register"}
+            </Link>
+
+            <Link
+              href="/contact"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="font-serif text-2xl text-brand-gold hover:text-brand-ivory transition-colors mt-2"
+            >
+              Let&apos;s Talk
+            </Link>
+          </div>
         </nav>
       </div>
     </>

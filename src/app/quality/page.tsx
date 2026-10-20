@@ -31,17 +31,17 @@ export default function QualityPage() {
         <div className="relative">
           {/* Vertical Line */}
           <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-brand-charcoal/10 -translate-x-1/2" />
-          
+
           <div className="flex flex-col gap-12 md:gap-24">
             {qualitySteps.map((step, idx) => (
               <div key={idx} className={`relative flex items-center md:justify-between ${idx % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'}`}>
-                
+
                 {/* Timeline Dot */}
                 <div className="absolute left-4 md:left-1/2 w-3 h-3 bg-brand-gold rounded-full -translate-x-1/2 z-10 shadow-[0_0_0_4px_rgba(253,251,247,1)]" />
-                
+
                 {/* Spacer for alternating layout */}
                 <div className="hidden md:block w-1/2" />
-                
+
                 {/* Content Card */}
                 <div className={`w-full pl-12 md:pl-0 md:w-5/12 ${idx % 2 === 0 ? 'md:pr-12 md:text-right' : 'md:pl-12 md:text-left'}`}>
                   <span className="text-brand-gold font-serif text-xl mb-2 block">0{idx + 1}</span>

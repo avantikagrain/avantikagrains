@@ -19,7 +19,7 @@ export default function CheckoutPage() {
   const handlePayment = (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
-    
+
     // Simulate payment processing delay
     setTimeout(() => {
       router.push("/order-confirmation");
@@ -32,7 +32,7 @@ export default function CheckoutPage() {
         <h1 className="font-serif text-4xl mb-10 tracking-tight">Checkout</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          
+
           {/* Main Checkout Flow */}
           <div className="lg:col-span-2">
             {!checkoutMode && (
@@ -41,9 +41,9 @@ export default function CheckoutPage() {
                 <p className="text-sm text-brand-charcoal/60 mb-8">
                   Sign in to use your saved addresses, or easily continue as a guest.
                 </p>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Link 
+                  <Link
                     href="/account/login"
                     className="py-4 border border-brand-charcoal flex flex-col items-center justify-center text-center hover:bg-brand-charcoal hover:text-brand-ivory transition-colors group"
                   >
@@ -51,7 +51,7 @@ export default function CheckoutPage() {
                     <span className="text-xs text-brand-charcoal/60 group-hover:text-brand-ivory/60 transition-colors">Use saved details</span>
                   </Link>
 
-                  <button 
+                  <button
                     onClick={() => setCheckoutMode("guest")}
                     className="py-4 border border-brand-charcoal/20 flex flex-col items-center justify-center text-center hover:border-brand-gold hover:bg-brand-gold/5 transition-colors"
                   >
@@ -101,8 +101,8 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     disabled={isProcessing}
                     className="w-full py-4 bg-brand-gold text-brand-charcoal font-semibold text-sm uppercase tracking-widest hover:bg-brand-charcoal hover:text-brand-ivory transition-colors mt-8 disabled:opacity-50"
                   >
@@ -118,18 +118,18 @@ export default function CheckoutPage() {
                   <h2 className="font-serif text-2xl">Delivery Details</h2>
                   <span className="text-sm font-medium text-brand-charcoal/60">{user?.email}</span>
                 </div>
-                
+
                 <p className="text-sm text-brand-charcoal/60 mb-6">
                   Select a saved address from your account.
                 </p>
-                
+
                 {/* Placeholder for saved addresses */}
                 <div className="border border-brand-gold bg-brand-gold/5 p-4 rounded mb-6 flex justify-between items-start cursor-pointer">
                   <div>
                     <span className="text-xs font-semibold bg-brand-gold px-2 py-0.5 rounded text-brand-charcoal mb-2 inline-block uppercase tracking-wider">HOME</span>
                     <p className="font-medium">{user?.firstName} {user?.lastName}</p>
                     <p className="text-sm text-brand-charcoal/70 mt-1">
-                      123 Premium Lane, Near Square<br/>
+                      123 Premium Lane, Near Square<br />
                       Indore, Madhya Pradesh, 452001
                     </p>
                   </div>
@@ -141,8 +141,8 @@ export default function CheckoutPage() {
                 </button>
 
                 <form onSubmit={handlePayment}>
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     disabled={isProcessing}
                     className="w-full py-4 bg-brand-gold text-brand-charcoal font-semibold text-sm uppercase tracking-widest hover:bg-brand-charcoal hover:text-brand-ivory transition-colors disabled:opacity-50"
                   >
@@ -157,7 +157,7 @@ export default function CheckoutPage() {
           <div className="lg:col-span-1">
             <div className="bg-white border border-[#E9E1D2] rounded-xl p-6 sticky top-32">
               <h3 className="font-serif text-xl mb-4 border-b border-brand-charcoal/10 pb-4">Order Summary</h3>
-              
+
               <div className="space-y-4 mb-6 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                 {items.map((item) => (
                   <div key={item.id} className="flex justify-between text-sm">
@@ -186,7 +186,7 @@ export default function CheckoutPage() {
               </div>
             </div>
           </div>
-          
+
         </div>
       </div>
     </div>

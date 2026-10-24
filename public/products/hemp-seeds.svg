@@ -1,0 +1,159 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000" role="img" aria-label="Hemp Seeds">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FBF8F0"/>
+      <stop offset="100%" stop-color="#F3EDDF"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="1000" fill="url(#bg)"/>
+  <circle cx="400" cy="560" r="250" fill="#FFFFFF" opacity="0.55"/>
+
+  <ellipse cx="261.8" cy="447.4" rx="9.5"
+         ry="15.5" fill="#2F5D45" opacity="0.80"
+         transform="rotate(12.3 261.8 447.4)"/>
+<ellipse cx="189.0" cy="645.8" rx="7.3"
+         ry="12.0" fill="#A8824E" opacity="0.84"
+         transform="rotate(130.3 189.0 645.8)"/>
+<ellipse cx="270.3" cy="641.6" rx="13.7"
+         ry="22.4" fill="#A8824E" opacity="0.49"
+         transform="rotate(117.4 270.3 641.6)"/>
+<ellipse cx="503.0" cy="476.4" rx="13.8"
+         ry="22.7" fill="#2F5D45" opacity="0.54"
+         transform="rotate(115.2 503.0 476.4)"/>
+<ellipse cx="267.0" cy="717.4" rx="15.0"
+         ry="24.6" fill="#A8824E" opacity="0.74"
+         transform="rotate(57.9 267.0 717.4)"/>
+<ellipse cx="330.6" cy="714.2" rx="8.7"
+         ry="14.3" fill="#A8824E" opacity="0.88"
+         transform="rotate(26.9 330.6 714.2)"/>
+<ellipse cx="215.6" cy="506.5" rx="8.5"
+         ry="13.9" fill="#2F5D45" opacity="0.64"
+         transform="rotate(153.2 215.6 506.5)"/>
+<ellipse cx="372.4" cy="570.8" rx="6.8"
+         ry="11.1" fill="#A8824E" opacity="0.88"
+         transform="rotate(112.3 372.4 570.8)"/>
+<ellipse cx="402.9" cy="476.1" rx="9.7"
+         ry="15.9" fill="#A8824E" opacity="0.55"
+         transform="rotate(77.6 402.9 476.1)"/>
+<ellipse cx="523.6" cy="504.3" rx="14.1"
+         ry="23.1" fill="#2F5D45" opacity="0.67"
+         transform="rotate(178.4 523.6 504.3)"/>
+<ellipse cx="315.7" cy="718.8" rx="7.5"
+         ry="12.2" fill="#A8824E" opacity="0.49"
+         transform="rotate(136.7 315.7 718.8)"/>
+<ellipse cx="403.8" cy="423.1" rx="14.8"
+         ry="24.3" fill="#A8824E" opacity="0.84"
+         transform="rotate(128.6 403.8 423.1)"/>
+<ellipse cx="356.2" cy="594.6" rx="13.9"
+         ry="22.8" fill="#2F5D45" opacity="0.70"
+         transform="rotate(8.4 356.2 594.6)"/>
+<ellipse cx="210.1" cy="476.9" rx="9.8"
+         ry="16.1" fill="#A8824E" opacity="0.52"
+         transform="rotate(159.0 210.1 476.9)"/>
+<ellipse cx="420.9" cy="458.8" rx="10.0"
+         ry="16.3" fill="#A8824E" opacity="0.58"
+         transform="rotate(155.5 420.9 458.8)"/>
+<ellipse cx="274.0" cy="697.1" rx="7.2"
+         ry="11.8" fill="#2F5D45" opacity="0.79"
+         transform="rotate(46.8 274.0 697.1)"/>
+<ellipse cx="429.2" cy="567.7" rx="10.6"
+         ry="17.4" fill="#A8824E" opacity="0.51"
+         transform="rotate(160.1 429.2 567.7)"/>
+<ellipse cx="262.7" cy="737.8" rx="10.3"
+         ry="16.9" fill="#A8824E" opacity="0.78"
+         transform="rotate(29.6 262.7 737.8)"/>
+<ellipse cx="322.9" cy="638.1" rx="7.3"
+         ry="11.9" fill="#2F5D45" opacity="0.89"
+         transform="rotate(131.9 322.9 638.1)"/>
+<ellipse cx="446.9" cy="667.5" rx="13.8"
+         ry="22.6" fill="#A8824E" opacity="0.52"
+         transform="rotate(11.4 446.9 667.5)"/>
+<ellipse cx="575.1" cy="715.7" rx="10.4"
+         ry="17.1" fill="#A8824E" opacity="0.56"
+         transform="rotate(142.0 575.1 715.7)"/>
+<ellipse cx="539.0" cy="475.6" rx="7.8"
+         ry="12.8" fill="#2F5D45" opacity="0.67"
+         transform="rotate(148.5 539.0 475.6)"/>
+<ellipse cx="572.3" cy="685.8" rx="9.1"
+         ry="14.9" fill="#A8824E" opacity="0.55"
+         transform="rotate(44.7 572.3 685.8)"/>
+<ellipse cx="616.8" cy="418.5" rx="7.5"
+         ry="12.3" fill="#A8824E" opacity="0.68"
+         transform="rotate(41.8 616.8 418.5)"/>
+<ellipse cx="352.6" cy="432.3" rx="9.0"
+         ry="14.7" fill="#2F5D45" opacity="0.71"
+         transform="rotate(130.6 352.6 432.3)"/>
+<ellipse cx="412.9" cy="467.8" rx="8.3"
+         ry="13.6" fill="#A8824E" opacity="0.46"
+         transform="rotate(69.6 412.9 467.8)"/>
+<ellipse cx="412.5" cy="597.7" rx="13.7"
+         ry="22.4" fill="#A8824E" opacity="0.81"
+         transform="rotate(87.5 412.5 597.7)"/>
+<ellipse cx="438.9" cy="455.0" rx="10.7"
+         ry="17.5" fill="#2F5D45" opacity="0.54"
+         transform="rotate(19.8 438.9 455.0)"/>
+<ellipse cx="361.5" cy="717.6" rx="10.6"
+         ry="17.3" fill="#A8824E" opacity="0.59"
+         transform="rotate(131.9 361.5 717.6)"/>
+<ellipse cx="198.7" cy="438.9" rx="7.8"
+         ry="12.8" fill="#A8824E" opacity="0.47"
+         transform="rotate(91.0 198.7 438.9)"/>
+<ellipse cx="516.8" cy="575.4" rx="11.3"
+         ry="18.5" fill="#2F5D45" opacity="0.66"
+         transform="rotate(28.9 516.8 575.4)"/>
+<ellipse cx="514.0" cy="496.0" rx="12.3"
+         ry="20.0" fill="#A8824E" opacity="0.86"
+         transform="rotate(103.8 514.0 496.0)"/>
+<ellipse cx="211.6" cy="606.4" rx="9.3"
+         ry="15.1" fill="#A8824E" opacity="0.89"
+         transform="rotate(137.3 211.6 606.4)"/>
+<ellipse cx="383.9" cy="570.0" rx="7.2"
+         ry="11.7" fill="#2F5D45" opacity="0.67"
+         transform="rotate(94.6 383.9 570.0)"/>
+<ellipse cx="591.8" cy="588.4" rx="10.9"
+         ry="17.9" fill="#A8824E" opacity="0.49"
+         transform="rotate(129.7 591.8 588.4)"/>
+<ellipse cx="251.9" cy="670.1" rx="7.5"
+         ry="12.2" fill="#A8824E" opacity="0.67"
+         transform="rotate(47.6 251.9 670.1)"/>
+<ellipse cx="219.0" cy="412.7" rx="9.1"
+         ry="14.9" fill="#2F5D45" opacity="0.76"
+         transform="rotate(104.2 219.0 412.7)"/>
+<ellipse cx="463.6" cy="520.2" rx="13.0"
+         ry="21.3" fill="#A8824E" opacity="0.78"
+         transform="rotate(103.2 463.6 520.2)"/>
+<ellipse cx="228.1" cy="448.3" rx="6.7"
+         ry="11.0" fill="#A8824E" opacity="0.80"
+         transform="rotate(117.2 228.1 448.3)"/>
+<ellipse cx="614.6" cy="737.2" rx="12.3"
+         ry="20.2" fill="#2F5D45" opacity="0.55"
+         transform="rotate(140.0 614.6 737.2)"/>
+<ellipse cx="322.3" cy="663.7" rx="8.6"
+         ry="14.0" fill="#A8824E" opacity="0.61"
+         transform="rotate(79.3 322.3 663.7)"/>
+<ellipse cx="419.4" cy="646.5" rx="11.2"
+         ry="18.3" fill="#A8824E" opacity="0.83"
+         transform="rotate(59.8 419.4 646.5)"/>
+<ellipse cx="435.7" cy="725.1" rx="12.0"
+         ry="19.7" fill="#2F5D45" opacity="0.62"
+         transform="rotate(51.9 435.7 725.1)"/>
+<ellipse cx="198.2" cy="518.1" rx="9.4"
+         ry="15.3" fill="#A8824E" opacity="0.50"
+         transform="rotate(119.1 198.2 518.1)"/>
+<ellipse cx="388.2" cy="595.2" rx="7.6"
+         ry="12.5" fill="#A8824E" opacity="0.85"
+         transform="rotate(49.4 388.2 595.2)"/>
+<ellipse cx="522.6" cy="523.8" rx="12.0"
+         ry="19.7" fill="#2F5D45" opacity="0.86"
+         transform="rotate(5.9 522.6 523.8)"/>
+
+  <text x="400" y="160" text-anchor="middle" font-family="ui-serif, Georgia, serif"
+    font-size="46" fill="#2A2621">Hemp Seeds</text>
+  <text x="400" y="212" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif"
+    font-size="27" fill="#2F5D45" opacity="0.8">Bhang Ke Beej</text>
+
+  <rect x="330" y="860" width="140" height="46" rx="23" fill="#2F5D45"/>
+  <text x="400" y="891" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif"
+    font-size="22" letter-spacing="1.5" fill="#FBF8F0">250 g</text>
+</svg>

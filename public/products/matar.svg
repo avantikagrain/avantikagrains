@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000" role="img" aria-label="Dried Peas">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FBF8F0"/>
+      <stop offset="100%" stop-color="#F3EDDF"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="1000" fill="url(#bg)"/>
+  <circle cx="400" cy="560" r="250" fill="#FFFFFF" opacity="0.55"/>
+
+  <ellipse cx="210.0" cy="700" rx="36" ry="25" fill="#A8824E"
+           opacity="0.90"
+           transform="rotate(-7.8 210.0 700)"/>
+<ellipse cx="286.0" cy="700" rx="36" ry="25" fill="#A8824E"
+           opacity="0.90"
+           transform="rotate(-8.8 286.0 700)"/>
+<ellipse cx="362.0" cy="700" rx="36" ry="25" fill="#A8824E"
+           opacity="0.90"
+           transform="rotate(-7.9 362.0 700)"/>
+<ellipse cx="438.0" cy="700" rx="36" ry="25" fill="#A8824E"
+           opacity="0.90"
+           transform="rotate(7.9 438.0 700)"/>
+<ellipse cx="514.0" cy="700" rx="36" ry="25" fill="#A8824E"
+           opacity="0.90"
+           transform="rotate(4.5 514.0 700)"/>
+<ellipse cx="590.0" cy="700" rx="36" ry="25" fill="#A8824E"
+           opacity="0.90"
+           transform="rotate(-10.9 590.0 700)"/>
+<ellipse cx="248.0" cy="630" rx="36" ry="25" fill="#2F5D45"
+           opacity="0.82"
+           transform="rotate(-10.3 248.0 630)"/>
+<ellipse cx="324.0" cy="630" rx="36" ry="25" fill="#2F5D45"
+           opacity="0.82"
+           transform="rotate(-3.0 324.0 630)"/>
+<ellipse cx="400.0" cy="630" rx="36" ry="25" fill="#2F5D45"
+           opacity="0.82"
+           transform="rotate(-3.7 400.0 630)"/>
+<ellipse cx="476.0" cy="630" rx="36" ry="25" fill="#2F5D45"
+           opacity="0.82"
+           transform="rotate(-4.2 476.0 630)"/>
+<ellipse cx="552.0" cy="630" rx="36" ry="25" fill="#2F5D45"
+           opacity="0.82"
+           transform="rotate(9.7 552.0 630)"/>
+<ellipse cx="286.0" cy="560" rx="36" ry="25" fill="#A8824E"
+           opacity="0.74"
+           transform="rotate(8.5 286.0 560)"/>
+<ellipse cx="362.0" cy="560" rx="36" ry="25" fill="#A8824E"
+           opacity="0.74"
+           transform="rotate(-6.3 362.0 560)"/>
+<ellipse cx="438.0" cy="560" rx="36" ry="25" fill="#A8824E"
+           opacity="0.74"
+           transform="rotate(-7.9 438.0 560)"/>
+<ellipse cx="514.0" cy="560" rx="36" ry="25" fill="#A8824E"
+           opacity="0.74"
+           transform="rotate(6.3 514.0 560)"/>
+<ellipse cx="324.0" cy="492" rx="36" ry="25" fill="#2F5D45"
+           opacity="0.66"
+           transform="rotate(-5.7 324.0 492)"/>
+<ellipse cx="400.0" cy="492" rx="36" ry="25" fill="#2F5D45"
+           opacity="0.66"
+           transform="rotate(0.5 400.0 492)"/>
+<ellipse cx="476.0" cy="492" rx="36" ry="25" fill="#2F5D45"
+           opacity="0.66"
+           transform="rotate(9.8 476.0 492)"/>
+<ellipse cx="362.0" cy="426" rx="36" ry="25" fill="#A8824E"
+           opacity="0.58"
+           transform="rotate(6.2 362.0 426)"/>
+<ellipse cx="438.0" cy="426" rx="36" ry="25" fill="#A8824E"
+           opacity="0.58"
+           transform="rotate(-9.2 438.0 426)"/>
+
+  <text x="400" y="160" text-anchor="middle" font-family="ui-serif, Georgia, serif"
+    font-size="46" fill="#2A2621">Dried Peas</text>
+  <text x="400" y="212" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif"
+    font-size="27" fill="#2F5D45" opacity="0.8">Matar</text>
+
+  <rect x="330" y="860" width="140" height="46" rx="23" fill="#2F5D45"/>
+  <text x="400" y="891" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif"
+    font-size="22" letter-spacing="1.5" fill="#FBF8F0">1 KG</text>
+</svg>

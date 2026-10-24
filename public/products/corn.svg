@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000" role="img" aria-label="Corn">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FBF8F0"/>
+      <stop offset="100%" stop-color="#F3EDDF"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="1000" fill="url(#bg)"/>
+  <circle cx="400" cy="560" r="250" fill="#FFFFFF" opacity="0.55"/>
+
+  <path d="M260 760 Q267.389 600 270.3446 430"
+         stroke="#2F5D45" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.75"/>
+<ellipse cx="296.3" cy="430.0" rx="17" ry="34"
+           fill="#A8824E" opacity="0.85"
+           transform="rotate(28 296.3 430.0)"/>
+<ellipse cx="242.9" cy="472.9" rx="17" ry="34"
+           fill="#A8824E" opacity="0.81"
+           transform="rotate(-28 242.9 472.9)"/>
+<ellipse cx="293.4" cy="515.7" rx="17" ry="34"
+           fill="#A8824E" opacity="0.78"
+           transform="rotate(28 293.4 515.7)"/>
+<ellipse cx="239.9" cy="558.6" rx="17" ry="34"
+           fill="#A8824E" opacity="0.74"
+           transform="rotate(-28 239.9 558.6)"/>
+<ellipse cx="290.4" cy="601.4" rx="17" ry="34"
+           fill="#A8824E" opacity="0.71"
+           transform="rotate(28 290.4 601.4)"/>
+<ellipse cx="237.0" cy="644.3" rx="17" ry="34"
+           fill="#A8824E" opacity="0.67"
+           transform="rotate(-28 237.0 644.3)"/>
+<ellipse cx="287.5" cy="687.1" rx="17" ry="34"
+           fill="#A8824E" opacity="0.64"
+           transform="rotate(28 287.5 687.1)"/>
+<path d="M400 760 Q396.637 600 395.2918 430"
+         stroke="#2F5D45" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.75"/>
+<ellipse cx="421.3" cy="430.0" rx="17" ry="34"
+           fill="#A8824E" opacity="0.85"
+           transform="rotate(28 421.3 430.0)"/>
+<ellipse cx="370.0" cy="472.9" rx="17" ry="34"
+           fill="#A8824E" opacity="0.81"
+           transform="rotate(-28 370.0 472.9)"/>
+<ellipse cx="422.6" cy="515.7" rx="17" ry="34"
+           fill="#A8824E" opacity="0.78"
+           transform="rotate(28 422.6 515.7)"/>
+<ellipse cx="371.3" cy="558.6" rx="17" ry="34"
+           fill="#A8824E" opacity="0.74"
+           transform="rotate(-28 371.3 558.6)"/>
+<ellipse cx="424.0" cy="601.4" rx="17" ry="34"
+           fill="#A8824E" opacity="0.71"
+           transform="rotate(28 424.0 601.4)"/>
+<ellipse cx="372.7" cy="644.3" rx="17" ry="34"
+           fill="#A8824E" opacity="0.67"
+           transform="rotate(-28 372.7 644.3)"/>
+<ellipse cx="425.3" cy="687.1" rx="17" ry="34"
+           fill="#A8824E" opacity="0.64"
+           transform="rotate(28 425.3 687.1)"/>
+<path d="M540 760 Q535.38 600 533.532 430"
+         stroke="#2F5D45" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.75"/>
+<ellipse cx="559.5" cy="430.0" rx="17" ry="34"
+           fill="#A8824E" opacity="0.85"
+           transform="rotate(28 559.5 430.0)"/>
+<ellipse cx="508.5" cy="472.9" rx="17" ry="34"
+           fill="#A8824E" opacity="0.81"
+           transform="rotate(-28 508.5 472.9)"/>
+<ellipse cx="561.4" cy="515.7" rx="17" ry="34"
+           fill="#A8824E" opacity="0.78"
+           transform="rotate(28 561.4 515.7)"/>
+<ellipse cx="510.3" cy="558.6" rx="17" ry="34"
+           fill="#A8824E" opacity="0.74"
+           transform="rotate(-28 510.3 558.6)"/>
+<ellipse cx="563.2" cy="601.4" rx="17" ry="34"
+           fill="#A8824E" opacity="0.71"
+           transform="rotate(28 563.2 601.4)"/>
+<ellipse cx="512.2" cy="644.3" rx="17" ry="34"
+           fill="#A8824E" opacity="0.67"
+           transform="rotate(-28 512.2 644.3)"/>
+<ellipse cx="565.1" cy="687.1" rx="17" ry="34"
+           fill="#A8824E" opacity="0.64"
+           transform="rotate(28 565.1 687.1)"/>
+
+  <text x="400" y="160" text-anchor="middle" font-family="ui-serif, Georgia, serif"
+    font-size="46" fill="#2A2621">Corn</text>
+  <text x="400" y="212" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif"
+    font-size="27" fill="#2F5D45" opacity="0.8">Makka</text>
+
+  <rect x="330" y="860" width="140" height="46" rx="23" fill="#2F5D45"/>
+  <text x="400" y="891" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif"
+    font-size="22" letter-spacing="1.5" fill="#FBF8F0">1 KG</text>
+</svg>

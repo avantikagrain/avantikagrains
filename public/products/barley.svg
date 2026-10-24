@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000" role="img" aria-label="Barley">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FBF8F0"/>
+      <stop offset="100%" stop-color="#F3EDDF"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="1000" fill="url(#bg)"/>
+  <circle cx="400" cy="560" r="250" fill="#FFFFFF" opacity="0.55"/>
+
+  <path d="M260 760 Q274.04 600 279.656 430"
+         stroke="#2F5D45" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.75"/>
+<ellipse cx="305.7" cy="430.0" rx="17" ry="34"
+           fill="#A8824E" opacity="0.85"
+           transform="rotate(28 305.7 430.0)"/>
+<ellipse cx="250.8" cy="472.9" rx="17" ry="34"
+           fill="#A8824E" opacity="0.81"
+           transform="rotate(-28 250.8 472.9)"/>
+<ellipse cx="300.0" cy="515.7" rx="17" ry="34"
+           fill="#A8824E" opacity="0.78"
+           transform="rotate(28 300.0 515.7)"/>
+<ellipse cx="245.2" cy="558.6" rx="17" ry="34"
+           fill="#A8824E" opacity="0.74"
+           transform="rotate(-28 245.2 558.6)"/>
+<ellipse cx="294.4" cy="601.4" rx="17" ry="34"
+           fill="#A8824E" opacity="0.71"
+           transform="rotate(28 294.4 601.4)"/>
+<ellipse cx="239.6" cy="644.3" rx="17" ry="34"
+           fill="#A8824E" opacity="0.67"
+           transform="rotate(-28 239.6 644.3)"/>
+<ellipse cx="288.8" cy="687.1" rx="17" ry="34"
+           fill="#A8824E" opacity="0.64"
+           transform="rotate(28 288.8 687.1)"/>
+<path d="M400 760 Q387.766 600 382.8724 430"
+         stroke="#2F5D45" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.75"/>
+<ellipse cx="408.9" cy="430.0" rx="17" ry="34"
+           fill="#A8824E" opacity="0.85"
+           transform="rotate(28 408.9 430.0)"/>
+<ellipse cx="359.3" cy="472.9" rx="17" ry="34"
+           fill="#A8824E" opacity="0.81"
+           transform="rotate(-28 359.3 472.9)"/>
+<ellipse cx="413.8" cy="515.7" rx="17" ry="34"
+           fill="#A8824E" opacity="0.78"
+           transform="rotate(28 413.8 515.7)"/>
+<ellipse cx="364.2" cy="558.6" rx="17" ry="34"
+           fill="#A8824E" opacity="0.74"
+           transform="rotate(-28 364.2 558.6)"/>
+<ellipse cx="418.7" cy="601.4" rx="17" ry="34"
+           fill="#A8824E" opacity="0.71"
+           transform="rotate(28 418.7 601.4)"/>
+<ellipse cx="369.1" cy="644.3" rx="17" ry="34"
+           fill="#A8824E" opacity="0.67"
+           transform="rotate(-28 369.1 644.3)"/>
+<ellipse cx="423.6" cy="687.1" rx="17" ry="34"
+           fill="#A8824E" opacity="0.64"
+           transform="rotate(28 423.6 687.1)"/>
+<path d="M540 760 Q551.007 600 555.4098 430"
+         stroke="#2F5D45" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.75"/>
+<ellipse cx="581.4" cy="430.0" rx="17" ry="34"
+           fill="#A8824E" opacity="0.85"
+           transform="rotate(28 581.4 430.0)"/>
+<ellipse cx="527.2" cy="472.9" rx="17" ry="34"
+           fill="#A8824E" opacity="0.81"
+           transform="rotate(-28 527.2 472.9)"/>
+<ellipse cx="577.0" cy="515.7" rx="17" ry="34"
+           fill="#A8824E" opacity="0.78"
+           transform="rotate(28 577.0 515.7)"/>
+<ellipse cx="522.8" cy="558.6" rx="17" ry="34"
+           fill="#A8824E" opacity="0.74"
+           transform="rotate(-28 522.8 558.6)"/>
+<ellipse cx="572.6" cy="601.4" rx="17" ry="34"
+           fill="#A8824E" opacity="0.71"
+           transform="rotate(28 572.6 601.4)"/>
+<ellipse cx="518.4" cy="644.3" rx="17" ry="34"
+           fill="#A8824E" opacity="0.67"
+           transform="rotate(-28 518.4 644.3)"/>
+<ellipse cx="568.2" cy="687.1" rx="17" ry="34"
+           fill="#A8824E" opacity="0.64"
+           transform="rotate(28 568.2 687.1)"/>
+
+  <text x="400" y="160" text-anchor="middle" font-family="ui-serif, Georgia, serif"
+    font-size="46" fill="#2A2621">Barley</text>
+  <text x="400" y="212" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif"
+    font-size="27" fill="#2F5D45" opacity="0.8">Jau</text>
+
+  <rect x="330" y="860" width="140" height="46" rx="23" fill="#2F5D45"/>
+  <text x="400" y="891" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif"
+    font-size="22" letter-spacing="1.5" fill="#FBF8F0">1 KG</text>
+</svg>

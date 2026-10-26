@@ -17,6 +17,7 @@ interface Variant {
 }
 
 interface Product {
+  id: string;
   slug: string;
   name: string;
   variants: Variant[];
@@ -35,7 +36,7 @@ export function AddToCart({ product }: { product: Product }) {
   if (!variant) return null;
 
   const line = {
-    productId: product.slug,
+    productId: product.id,
     variantId: variant.id,
     slug: product.slug,
     name: product.name,

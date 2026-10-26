@@ -1,7 +1,3 @@
-// mongoose is a CommonJS package. With "type": "module" in package.json,
-// named ESM imports of its runtime exports fail under plain Node (tsx, seed
-// scripts) even though bundlers paper over it — so take the default export
-// and destructure. Types are erased at compile time and import normally.
 import mongoose, { type Model, type Types } from 'mongoose';
 
 const { Schema, model, models } = mongoose;
@@ -34,17 +30,14 @@ export interface IShipment {
   _id: Types.ObjectId;
   order: Types.ObjectId;
   provider: 'shiprocket';
-  /** Shiprocket's own order id — distinct from our orderNumber. */
+
   providerOrderId?: string;
   providerShipmentId?: string;
   awbCode?: string;
   courierName?: string;
   courierId?: number;
   status: ShipmentStatus;
-  /**
-   * Set before calling the provider. The unique index on it is what stops a
-   * timeout-and-retry from creating a second physical shipment.
-   */
+
   idempotencyKey: string;
   pickupScheduledDate?: Date;
   expectedDeliveryDate?: Date;
@@ -123,7 +116,6 @@ const shipmentSchema = new Schema<IShipment>(
   { timestamps: true },
 );
 
-// One shipment per order per idempotency key — the duplicate-shipment guard.
 shipmentSchema.index({ idempotencyKey: 1 }, { unique: true });
 shipmentSchema.index({ order: 1 });
 shipmentSchema.index({ awbCode: 1 }, { unique: true, sparse: true });

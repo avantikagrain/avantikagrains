@@ -3,20 +3,6 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { PageHeader, Prose } from '@/components/site/page-header';
 
-/**
- * Policy pages.
- *
- * The operational terms below are the ones the storefront actually enforces
- * in code — order states, refund routing, what is collected and why — so
- * they are accurate descriptions of the system's behaviour.
- *
- * What is NOT here is legal wording: governing law, jurisdiction, liability
- * limits, grievance officer details and the statutory consumer-complaint
- * text. Those have to come from the business and its counsel. Each page says
- * so at the foot rather than filling the gap with boilerplate that reads
- * authoritative and binds nobody.
- */
-
 interface Section {
   heading: string;
   paragraphs?: string[];

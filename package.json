@@ -14,14 +14,10 @@
     "typecheck": "tsc --noEmit",
     "seed:products": "tsx --env-file-if-exists=.env.local src/scripts/seed-products.ts",
     "seed:admin": "tsx --env-file-if-exists=.env.local src/scripts/seed-admin.ts",
-    "seed:demo": "tsx --env-file-if-exists=.env.local src/scripts/seed-demo.ts",
     "sweep:reservations": "tsx --env-file-if-exists=.env.local src/scripts/sweep-reservations.ts",
-    "gen:images": "tsx src/scripts/generate-placeholder-images.ts",
-    "fetch:images": "tsx --env-file-if-exists=.env.local src/scripts/fetch-unsplash-images.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "import:images": "tsx src/scripts/import-images.ts",
     "fonts:sync": "node scripts/sync-fonts.mjs"
   },
   "dependencies": {

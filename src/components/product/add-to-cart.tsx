@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Check, Loader2, Minus, Plus, ShoppingBag, Zap } from 'lucide-react';
 import { useCart } from '@/components/cart/cart-store';
 import { formatPaise } from '@/lib/format';
+import { MAX_ITEM_QUANTITY } from '@/lib/limits';
 
 interface Variant {
   id: string;
@@ -16,6 +17,7 @@ interface Variant {
 }
 
 interface Product {
+  id: string;
   slug: string;
   name: string;
   variants: Variant[];
@@ -34,7 +36,7 @@ export function AddToCart({ product }: { product: Product }) {
   if (!variant) return null;
 
   const line = {
-    productId: product.slug,
+    productId: product.id,
     variantId: variant.id,
     slug: product.slug,
     name: product.name,
@@ -50,8 +52,6 @@ export function AddToCart({ product }: { product: Product }) {
   }
 
   function handleBuyNow() {
-    // Held until the route changes, so a double tap on a slow connection
-    // cannot fire two navigations.
     setBuying(true);
     buyNow(line, quantity);
     router.push('/checkout');
@@ -106,8 +106,8 @@ export function AddToCart({ product }: { product: Product }) {
             </span>
             <button
               type="button"
-              onClick={() => setQuantity((q) => Math.min(99, q + 1))}
-              disabled={quantity >= 99}
+              onClick={() => setQuantity((q) => Math.min(MAX_ITEM_QUANTITY, q + 1))}
+              disabled={quantity >= MAX_ITEM_QUANTITY}
               aria-label="Increase quantity"
               className="grid h-10 w-10 place-items-center rounded-full text-[var(--fg-muted)] transition-colors hover:text-[var(--accent)] disabled:opacity-30"
             >
@@ -116,8 +116,6 @@ export function AddToCart({ product }: { product: Product }) {
           </div>
         </div>
 
-        {/* Buy now is the conversion path and gets the filled button; add
-            to cart keeps a browsing shopper browsing. */}
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <button
             type="button"
@@ -154,6 +152,18 @@ export function AddToCart({ product }: { product: Product }) {
           </button>
         </div>
 
+        {quantity >= MAX_ITEM_QUANTITY && (
+          <p className="mt-3 text-spec text-[var(--fg-faint)]">
+            {MAX_ITEM_QUANTITY} units is the maximum per item.{' '}
+            <Link
+              href="/bulk-orders"
+              className="font-medium text-[var(--accent)] underline underline-offset-4"
+            >
+              Need a larger quantity?
+            </Link>
+          </p>
+        )}
+
         {!variant.inStock && (
           <p className="mt-3 text-spec text-[var(--fg-faint)]">
             This pack size is out of stock.
@@ -170,10 +180,6 @@ export function AddToCart({ product }: { product: Product }) {
         )}
       </div>
 
-      {/* Mobile purchase bar.
-          On a phone the buttons above scroll out of view exactly when
-          someone finishes reading and decides. This keeps the action
-          reachable; it only renders below lg, where that is true. */}
       <div
         className="glass fixed inset-x-0 bottom-0 z-40 flex items-center gap-2.5 border-t border-[var(--hairline)] px-4 py-3 lg:hidden"
         style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}

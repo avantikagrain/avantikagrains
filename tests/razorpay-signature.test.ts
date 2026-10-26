@@ -1,14 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { verifyCheckoutSignature, verifyWebhookSignature } from '@/lib/razorpay';
 
-/**
- * Signature fixtures are hardcoded reference values, not recomputed inside
- * the test. Recomputing with the same helper the implementation uses would
- * only prove the function agrees with itself — these values were generated
- * independently and would fail if the algorithm, encoding or payload
- * construction ever changed.
- */
-
 const KEY_SECRET = 'thisisatestkeysecret';
 const WEBHOOK_SECRET = 'whsec_test_value';
 
@@ -84,7 +76,6 @@ describe('checkout handler signature', () => {
   });
 
   it('rejects a signature of the wrong length without throwing', () => {
-    // timingSafeEqual throws on length mismatch; the guard must catch it.
     expect(() =>
       verifyCheckoutSignature(
         {
@@ -104,12 +95,9 @@ describe('webhook signature', () => {
   });
 
   it('rejects a body that was re-serialised', () => {
-    // Parsing and re-stringifying changes the bytes — this is the single
-    // most common cause of valid webhooks failing verification.
     const reSerialised = JSON.stringify(JSON.parse(WEBHOOK_BODY));
     const changed = reSerialised !== WEBHOOK_BODY;
-    // For this fixture the round-trip happens to be identical, so assert on
-    // a body that genuinely differs by whitespace instead.
+
     expect(changed).toBe(false);
     expect(
       verifyWebhookSignature(
@@ -129,8 +117,6 @@ describe('webhook signature', () => {
   });
 
   it('does not accept the checkout signature on a webhook', () => {
-    // The two signatures use different secrets and different payloads;
-    // confusing them is a real integration bug.
     expect(verifyWebhookSignature(WEBHOOK_BODY, VALID_CHECKOUT_SIG, WEBHOOK_SECRET)).toBe(false);
   });
 

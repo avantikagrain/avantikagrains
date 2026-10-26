@@ -1,16 +1,5 @@
 @import "tailwindcss";
 
-/* ---- Typefaces --------------------------------------------------------
-   Self-hosted from public/fonts, so no third-party request stands between
-   a visitor and the brand's typography. See the note in layout.tsx.
-
-   `font-display: swap` shows fallback text immediately rather than blocking
-   the first paint; the two above-the-fold weights are preloaded in the
-   document head, so in practice the swap is not visible.
-
-   The unicode-range is the Latin subset these files actually contain —
-   declaring it lets the browser skip the download entirely for text it
-   cannot render with them. */
 @font-face {
   font-family: "Inter";
   font-style: normal;
@@ -72,44 +61,25 @@
     U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-/**
- * Avantika Grain Mills — design tokens
- *
- * Direction is taken from the brand's own marketing banners: a warm cream
- * ground, deep forest green as the primary, and a single gold accent for
- * emphasis. Light, warm and uncluttered — which is also what converts for
- * food retail, where people want to see the product clearly.
- *
- * Depth on a light ground comes from soft warm shadows and hairline
- * borders. Frosted glass is kept for the elements that actually sit over
- * imagery (the header, badges on a photo), where it does real work.
- */
-
 @theme {
-  /* ---- Ground --------------------------------------------------------
-     Warm paper, never clinical white. The raised step is near-white so
-     cards lift off the page without needing a heavy shadow. */
   --color-cream-50: #fdfbf6;
   --color-cream-100: #faf6ec;
   --color-cream-200: #f3ecdc;
   --color-cream-300: #e8dec8;
   --color-cream-400: #d7c9ab;
 
-  /* ---- Forest — the primary ------------------------------------------ */
   --color-forest-900: #16281c;
   --color-forest-800: #1e4430;
   --color-forest-700: #2a5a3e;
   --color-forest-600: #367050;
   --color-forest-100: #e3ede5;
 
-  /* ---- Gold — the single accent -------------------------------------- */
   --color-gold-700: #8d6d26;
   --color-gold-600: #a8832f;
   --color-gold-500: #c9a24b;
   --color-gold-300: #e3cd93;
   --color-gold-100: #f6edd6;
 
-  /* ---- Neutrals ------------------------------------------------------- */
   --color-ink-900: #1b2a1f;
   --color-ink-600: #5a6555;
   --color-ink-400: #8b9386;
@@ -117,8 +87,6 @@
   --color-flag-bad: #a23b22;
   --color-flag-good: #2f7d4f;
 
-  /* ---- Type -----------------------------------------------------------
-     Playfair Display carries the voice; Inter keeps small UI text legible. */
   --font-display: "Playfair Display", ui-serif, Georgia, serif;
   --font-text: "Inter", ui-sans-serif, system-ui, sans-serif;
 
@@ -134,18 +102,14 @@
   --tracking-label: 0.16em;
   --tracking-button: 0.1em;
 
-  /* ---- Structure ------------------------------------------------------ */
   --radius-pill: 999px;
   --radius-control: 8px;
   --radius-panel: 16px;
   --radius-panel-lg: 22px;
 
-  /* Warm-tinted shadows. A neutral grey shadow on a cream ground reads
-     as dirt rather than depth. */
   --shadow-soft: 0 1px 2px rgb(27 42 31 / 0.04), 0 2px 8px rgb(27 42 31 / 0.05);
   --shadow-lift: 0 2px 6px rgb(27 42 31 / 0.06), 0 16px 32px -12px rgb(27 42 31 / 0.16);
 
-  /* ---- Motion --------------------------------------------------------- */
   --ease-lux: cubic-bezier(0.22, 1, 0.36, 1);
   --t-fast: 180ms;
   --t-base: 380ms;
@@ -189,12 +153,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ---------------------------------------------------------------------
-   Panels
-   ---------------------------------------------------------------------
-   On a light ground a card reads as raised through a near-white fill, a
-   hairline and a warm shadow — not through translucency. Glass is kept
-   below for the places that genuinely sit over photography. */
 .panel {
   background: var(--bg-raised);
   border: 1px solid var(--hairline);
@@ -208,8 +166,6 @@ body {
     border-color var(--t-base) var(--ease-lux);
 }
 
-/* Hover only where a real pointer exists — on touch the state sticks after
-   a tap and the card looks frozen. */
 @media (hover: hover) and (pointer: fine) {
   .panel-hover:hover {
     transform: translateY(-4px);
@@ -218,13 +174,6 @@ body {
   }
 }
 
-/**
- * Frosted glass, for elements over imagery.
- *
- * backdrop-filter needs the element to stay translucent — a fully opaque
- * background has nothing to blur through. Browsers without it fall back to
- * a solid tint, so text never lands on an unreadable transparent box.
- */
 .glass {
   background: rgb(253 251 246 / 0.9);
   border: 1px solid rgb(255 255 255 / 0.6);
@@ -239,7 +188,6 @@ body {
   }
 }
 
-/** Gold hairline that wipes across a panel's top edge on hover. */
 .gold-edge { position: relative; }
 .gold-edge::after {
   content: "";
@@ -256,9 +204,6 @@ body {
   .gold-edge:hover::after { opacity: 1; }
 }
 
-/* ---------------------------------------------------------------------
-   Typography
-   --------------------------------------------------------------------- */
 .display {
   font-family: var(--font-display);
   font-weight: 600;
@@ -277,9 +222,6 @@ body {
 .measure { max-width: 34rem; }
 .measure-wide { max-width: 46rem; }
 
-/* ---------------------------------------------------------------------
-   Pills and buttons
-   --------------------------------------------------------------------- */
 .pill {
   display: inline-flex;
   align-items: center;
@@ -323,14 +265,12 @@ body {
 }
 .btn:active { transform: translateY(1px); }
 
-/** Primary action — forest green, the brand's own button. */
 .btn-primary {
   background: var(--accent);
   color: var(--color-cream-50);
   box-shadow: var(--shadow-soft);
 }
 
-/** Secondary — gold, used where a second action must still feel premium. */
 .btn-gold {
   background: var(--gold);
   color: var(--color-forest-900);
@@ -356,9 +296,6 @@ body {
   transform: none;
 }
 
-/* ---------------------------------------------------------------------
-   Media
-   --------------------------------------------------------------------- */
 .media {
   position: relative;
   aspect-ratio: 4 / 5;
@@ -381,16 +318,6 @@ body {
   .spec { grid-template-columns: 1fr; gap: 0.15rem; }
 }
 
-/* Narrow-column variant: label above value, for a panel too narrow for the
-   two-column form — a 21rem sidebar leaves the value about eight characters
-   wide, which breaks a phrase like "High-resolution trichromatic optical
-   sorting" over four lines.
-
-   This exists as a class rather than a Tailwind override because .spec is
-   written outside @layer, and unlayered CSS beats every layered utility
-   whatever its specificity — so `[&>.spec]:grid-cols-1` silently does
-   nothing. Anything that needs to vary one of these component classes has
-   to be a sibling class like this one. */
 .spec-stacked { grid-template-columns: 1fr; gap: 0.2rem; }
 
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {
@@ -398,14 +325,6 @@ body {
   outline-offset: 3px;
 }
 
-/* ---------------------------------------------------------------------
-   Scroll-driven reveals
-   ---------------------------------------------------------------------
-   Native CSS scroll-driven animation — no observer, no JS. `backwards`
-   fill applies the from-state before the element reaches its range, which
-   stops content flashing at full opacity first. Wrapped in @supports so
-   browsers without view() render normally rather than leaving content
-   stuck invisible. */
 @media (prefers-reduced-motion: no-preference) {
   @supports ((animation-timeline: view()) and (animation-range: entry)) {
     @keyframes rise {
@@ -426,13 +345,6 @@ body {
   .fade-in { animation: fade-in var(--t-slow) var(--ease-lux) backwards; }
 }
 
-/* ---------------------------------------------------------------------
-   Observer-driven reveal, stagger, and hero motion
-
-   `.reveal` above is scroll-driven and costs no JavaScript — prefer it.
-   These rules back the <Reveal> component, which exists only for a stagger
-   measured in milliseconds, something a scroll timeline cannot express.
-   --------------------------------------------------------------------- */
 [data-reveal] {
   opacity: 0;
   transform: translateY(20px);
@@ -445,9 +357,6 @@ body {
   transform: none;
 }
 
-/* Hero: the heading rises 20px as the image settles out of a 1.03 scale.
-   Both land together, so the picture appears to come to rest under the
-   words rather than the two moving independently. */
 @keyframes hero-rise {
   from { opacity: 0; transform: translateY(20px); }
 }
@@ -458,9 +367,6 @@ body {
 .hero-rise { animation: hero-rise 800ms var(--ease-lux) backwards; }
 .hero-settle { animation: hero-settle 900ms var(--ease-lux) both; }
 
-/* A photograph that lifts very slightly under the pointer. Pointer only:
-   on a touch screen the state latches after a tap and the image sits
-   zoomed with no way to undo it. */
 .grain-zoom img {
   transition: transform 350ms var(--ease-lux);
 }

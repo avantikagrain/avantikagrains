@@ -1,10 +1,3 @@
-/**
- * Consistent JSON envelope + centralised error handling for every
- * /api/v1 route handler.
- *
- * Success: { success: true, data, meta? }
- * Failure: { success: false, error: { code, message, details? }, requestId }
- */
 import { NextResponse } from 'next/server';
 import { ZodError } from 'zod';
 import mongoose from 'mongoose';
@@ -63,15 +56,10 @@ function requestId(): string {
   return globalThis.crypto?.randomUUID?.() ?? `req_${Date.now()}`;
 }
 
-/**
- * Translates any thrown value into a safe client response.
- * Unknown errors are logged in full and reported as a bare 500.
- */
 export function handleError(err: unknown, context?: Record<string, unknown>) {
   const id = requestId();
 
   if (isAppError(err)) {
-    // Expected, client-actionable failures: log at warn, no stack noise.
     logger.warn({ ...context, requestId: id, code: err.code, msg: err.message }, 'Request failed');
     return NextResponse.json(
       {
@@ -115,7 +103,6 @@ export function handleError(err: unknown, context?: Record<string, unknown>) {
     );
   }
 
-  // Duplicate key — surface the constraint, never the raw driver message.
   if (
     typeof err === 'object' &&
     err !== null &&
@@ -146,7 +133,6 @@ export function handleError(err: unknown, context?: Record<string, unknown>) {
   );
 }
 
-/** Wraps a route handler so no handler needs its own try/catch. */
 export function route<Args extends unknown[]>(
   handler: (...args: Args) => Promise<NextResponse>,
 ) {

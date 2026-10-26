@@ -1,11 +1,3 @@
-/**
- * Loading placeholder for a product grid.
- *
- * Mirrors the real card's geometry exactly — same 4:5 media ratio, same
- * rule, same line positions — so the layout does not jump when the data
- * arrives. A spinner in the middle of an empty page would shift everything
- * on swap and score worse on CLS.
- */
 export function ProductGridSkeleton({ count = 8 }: { count?: number }) {
   return (
     <div
@@ -36,7 +28,6 @@ export function ProductGridSkeleton({ count = 8 }: { count?: number }) {
   );
 }
 
-/** Loading placeholder for the product detail page. */
 export function ProductDetailSkeleton() {
   return (
     <div

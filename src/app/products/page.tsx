@@ -6,13 +6,6 @@ import { listCategories, listProducts } from '@/server/catalogue';
 
 export const revalidate = 3600;
 
-/**
- * Finished artwork for the unfiltered collection page.
- *
- * Lowercase and hyphenated on purpose: a filename with spaces has to be
- * percent-encoded in the URL, and one stray un-encoded space is a 404 that
- * only shows up in production.
- */
 const COLLECTION_BANNER = '/brand/collection-banner.png';
 
 export const metadata: Metadata = {
@@ -41,15 +34,7 @@ export default async function ProductsPage({
   return (
     <>
       {activeName ? (
-        /*
-          A filtered view — Grains, Pulses, Seeds.
 
-          The artwork below says "The collection" and counts thirty-one
-          products, both of which are wrong once a filter is on. So a
-          filtered page gets the plain wheat texture instead and sets its
-          own heading over it. `hero.webp` carries no type of its own,
-          which is exactly why it can.
-        */
         <header className="relative isolate overflow-hidden">
           <Image
             src="/brand/hero.webp"
@@ -61,12 +46,6 @@ export default async function ProductsPage({
             className="-z-10 object-cover"
           />
 
-          {/*
-            Scrim. Cream type over a mid-tone photograph fails contrast
-            without one, and the gradient is weighted to the bottom because
-            that is where the text sits — a flat overlay would mute the
-            photograph everywhere to fix one corner of it.
-          */}
           <div
             aria-hidden
             className="absolute inset-0 -z-10 bg-gradient-to-t from-[rgb(14_38_25/0.88)] via-[rgb(14_38_25/0.6)] to-[rgb(14_38_25/0.3)]"
@@ -80,22 +59,7 @@ export default async function ProductsPage({
           </div>
         </header>
       ) : (
-        /*
-          The unfiltered collection page, which has its own finished
-          artwork.
 
-          The headline, the standfirst and the four badges are drawn into
-          the image, so nothing is written over it — an HTML heading on top
-          would simply say the same thing twice. The page still needs a real
-          h1 for search engines and screen readers, so one is rendered and
-          hidden visually, and the image carries alt text that says what the
-          artwork says rather than what it looks like.
-
-          Two ratios, for the same reason as the homepage hero: shown whole
-          at 390px this is about 180px tall and its type is unreadable.
-          Everything that matters sits in the left portion of the artwork,
-          so phones get a 1.15:1 window anchored there.
-        */
         <header className="bg-[var(--bg-sunken)] pt-20 sm:pt-24">
           <h1 className="sr-only">The collection</h1>
           <div className="relative aspect-[1.15/1] sm:aspect-[1840/855]">
@@ -104,8 +68,7 @@ export default async function ProductsPage({
               alt="The collection — thirty-one products across cereals, pulses, seeds and curated boxes, each graded on the same line, to the same threshold. 100% natural, healthy families, premium quality, pan-India delivery."
               fill
               sizes="100vw"
-              // The banner is the page's LCP element, so it must not wait
-              // for layout to discover it.
+
               priority
               quality={82}
               className="object-cover object-left sm:object-center"
@@ -114,11 +77,6 @@ export default async function ProductsPage({
         </header>
       )}
 
-      {/*
-        Filters sit below the banner on a solid ground rather than on the
-        photograph. They are controls, and a control that has to be read
-        against moving texture is harder to use than one that does not.
-      */}
       <nav
         aria-label="Categories"
         className="border-b border-[var(--hairline)] bg-[var(--bg-raised)]"

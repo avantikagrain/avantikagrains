@@ -1,17 +1,10 @@
-/**
- * Role-based access control.
- *
- * Authorisation is enforced here, on the server, for every protected route.
- * Hiding a link in the admin navigation is presentation, not security.
- */
-
 export const USER_ROLES = [
   'customer',
-  'support',   // read orders/customers, no money movement
-  'catalogue', // product + inventory + content
-  'manager',   // orders, refunds within limit, coupons, reports
-  'admin',     // everything except owner-only settings
-  'owner',     // gateway credentials, role grants, destructive settings
+  'support',
+  'catalogue',
+  'manager',
+  'admin',
+  'owner',
 ] as const;
 
 export type UserRole = (typeof USER_ROLES)[number];
@@ -37,7 +30,7 @@ export type Permission =
   | 'report:read'
   | 'audit:read'
   | 'settings:read' | 'settings:write'
-  | 'integration:write'   // gateway + courier credentials
+  | 'integration:write'
   | 'role:grant';
 
 const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
@@ -79,9 +72,6 @@ const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     'settings:read', 'settings:write',
   ],
 
-  // Owner-only: integration credentials and role grants are deliberately
-  // withheld from `admin` so a compromised admin account cannot reroute
-  // settlements or escalate another account.
   owner: [
     'product:read', 'product:write',
     'inventory:read', 'inventory:write',

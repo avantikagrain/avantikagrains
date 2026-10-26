@@ -1,7 +1,3 @@
-// mongoose is a CommonJS package. With "type": "module" in package.json,
-// named ESM imports of its runtime exports fail under plain Node (tsx, seed
-// scripts) even though bundlers paper over it — so take the default export
-// and destructure. Types are erased at compile time and import normally.
 import mongoose, { type Model, type Types } from 'mongoose';
 
 const { Schema, model, models } = mongoose;
@@ -35,12 +31,12 @@ export interface IUser {
   emailVerifiedAt?: Date;
   phoneVerifiedAt?: Date;
   isActive: boolean;
-  /** Rotating refresh-token family id; cleared on logout-everywhere. */
+
   refreshTokenFamily?: string;
   failedLoginAttempts: number;
   lockedUntil?: Date;
   lastLoginAt?: Date;
-  /** Marketing consent — stored because Indian DPDP requires provable opt-in. */
+
   marketingOptInAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -87,7 +83,7 @@ const userSchema = new Schema<IUser>(
       match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Enter a valid email address'],
     },
     phone: { type: String, trim: true, match: [INDIAN_PHONE, 'Enter a valid mobile number'] },
-    // `select: false` so the hash never leaves the DB layer by accident.
+
     passwordHash: { type: String, required: true, select: false },
     firstName: { type: String, required: true, trim: true, maxlength: 80 },
     lastName: { type: String, trim: true, maxlength: 80 },
@@ -109,7 +105,6 @@ userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ phone: 1 }, { unique: true, sparse: true });
 userSchema.index({ role: 1, createdAt: -1 });
 
-/** Only one default shipping / billing address may exist per user. */
 userSchema.pre('save', function enforceSingleDefault(next) {
   if (this.isModified('addresses')) {
     let shippingSeen = false;

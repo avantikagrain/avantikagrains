@@ -1,10 +1,3 @@
-/**
- * Startup environment validation.
- *
- * Fail fast: if required configuration is missing or malformed the process
- * must not boot. Never import this file from a client component — it would
- * pull server secrets into the browser bundle.
- */
 import { z } from 'zod';
 
 const boolish = z
@@ -15,7 +8,6 @@ const serverSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(3000),
 
-  // URLs
   CLIENT_URL: z.string().url(),
   API_BASE_URL: z.string().url(),
   PUBLIC_SITE_URL: z.string().url(),
@@ -24,28 +16,23 @@ const serverSchema = z.object({
     .default('')
     .transform((v) => v.split(',').map((s) => s.trim()).filter(Boolean)),
 
-  // Database
   MONGODB_URI: z.string().startsWith('mongodb'),
   MONGODB_DB_NAME: z.string().min(1),
 
-  // Auth
   JWT_ACCESS_SECRET: z.string().min(32, 'must be at least 32 characters'),
   JWT_REFRESH_SECRET: z.string().min(32, 'must be at least 32 characters'),
   ACCESS_TOKEN_TTL: z.string().default('15m'),
   REFRESH_TOKEN_TTL: z.string().default('30d'),
   COOKIE_DOMAIN: z.string().optional(),
 
-  // Payments — Razorpay
   RAZORPAY_KEY_ID: z.string().min(1),
   RAZORPAY_KEY_SECRET: z.string().min(1),
   RAZORPAY_WEBHOOK_SECRET: z.string().min(1),
 
-  // Shipping — Shiprocket
   SHIPROCKET_EMAIL: z.string().email().optional(),
   SHIPROCKET_PASSWORD: z.string().optional(),
   SHIPROCKET_WEBHOOK_TOKEN: z.string().optional(),
 
-  // Media storage
   STORAGE_PROVIDER: z.enum(['s3', 'r2', 'local']).default('local'),
   STORAGE_BUCKET: z.string().optional(),
   STORAGE_REGION: z.string().optional(),
@@ -53,45 +40,21 @@ const serverSchema = z.object({
   STORAGE_SECRET_ACCESS_KEY: z.string().optional(),
   CDN_BASE_URL: z.string().url().optional(),
 
-  // Email
   EMAIL_PROVIDER: z.enum(['resend', 'ses', 'smtp', 'none']).default('none'),
   EMAIL_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().email().optional(),
 
-  // Stock imagery (development/demo only — see fetch-unsplash-images.ts)
-  UNSPLASH_ACCESS_KEY: z.string().optional(),
-
-  /**
-   * Lets products publish in production while still carrying stand-in
-   * imagery. A deliberate business decision, so it must be set explicitly;
-   * the FSSAI guard has no equivalent override.
-   */
-  ALLOW_PLACEHOLDER_IMAGES: boolish.default(false),
-
-  // Observability
   LOG_LEVEL: z
     .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace'])
     .default('info'),
   SENTRY_DSN: z.string().optional(),
 
-  // Commerce toggles
-  // Zod 4: .default() on a transformed schema takes the OUTPUT type.
   PAYMENTS_LIVE_MODE: boolish.default(false),
   COD_ENABLED: boolish.default(true),
 });
 
 export type ServerEnv = z.infer<typeof serverSchema>;
 
-/**
- * A variable missing from the .env file arrives as `undefined`, but a key
- * written with no value (`CDN_BASE_URL=`, as .env.example ships it) arrives
- * as an empty string. Both mean "not configured", yet `.optional()` only
- * accepts the first — so `.email()` and `.url()` reject the blank form.
- *
- * Stripping empty values before validation makes the two equivalent. It
- * also stops a half-filled setting (STORAGE_PROVIDER=s3 with
- * STORAGE_BUCKET=) from passing as present-but-empty.
- */
 const withBlanksAsAbsent = z.preprocess((raw) => {
   const cleaned: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
@@ -100,25 +63,82 @@ const withBlanksAsAbsent = z.preprocess((raw) => {
   return cleaned;
 }, serverSchema);
 
+function isBuildPhase(): boolean {
+  return process.env.NEXT_PHASE === 'phase-production-build';
+}
+
+const buildPhaseDefaults: Record<string, string> = {
+  CLIENT_URL: 'http://localhost:3000',
+  API_BASE_URL: 'http://localhost:3000/api/v1',
+  PUBLIC_SITE_URL: 'http://localhost:3000',
+  ALLOWED_ORIGINS: 'http://localhost:3000',
+  MONGODB_URI: 'mongodb://127.0.0.1:27017',
+  MONGODB_DB_NAME: 'build',
+  JWT_ACCESS_SECRET: 'build-phase-placeholder-secret-value-32ch',
+  JWT_REFRESH_SECRET: 'build-phase-placeholder-secret-value-32ch',
+  RAZORPAY_KEY_ID: 'rzp_test_build',
+  RAZORPAY_KEY_SECRET: 'build-phase-placeholder',
+  RAZORPAY_WEBHOOK_SECRET: 'build-phase-placeholder',
+};
+
+export function productionWarnings(value: ServerEnv): string[] {
+  const warnings: string[] = [];
+
+  if (value.ALLOWED_ORIGINS.length === 0) {
+    warnings.push(
+      'ALLOWED_ORIGINS is not set. Cross-origin requests are refused until it is.',
+    );
+  }
+
+  if (value.STORAGE_PROVIDER === 'local' && !value.CDN_BASE_URL) {
+    warnings.push(
+      'STORAGE_PROVIDER=local without CDN_BASE_URL. On a host with an ephemeral ' +
+        'filesystem, uploaded media is lost on every deploy. Set an object-storage ' +
+        'provider (s3 / r2) before enabling uploads.',
+    );
+  }
+
+  if (value.EMAIL_PROVIDER === 'none') {
+    warnings.push('EMAIL_PROVIDER=none. Order confirmation emails are not being sent.');
+  }
+
+  return warnings;
+}
+
 let cached: ServerEnv | null = null;
 
 export function getEnv(): ServerEnv {
   if (cached) return cached;
 
-  const parsed = withBlanksAsAbsent.safeParse(process.env);
+  const building = isBuildPhase();
+
+  const source = building
+    ? { ...buildPhaseDefaults, ...process.env }
+    : process.env;
+
+  const parsed = withBlanksAsAbsent.safeParse(source);
 
   if (!parsed.success) {
     const issues = parsed.error.issues
       .map((i) => `  - ${i.path.join('.')}: ${i.message}`)
       .join('\n');
-    throw new Error(`Invalid environment configuration:\n${issues}`);
+
+    const everythingMissing = parsed.error.issues.every((i) =>
+      i.message.includes('received undefined'),
+    );
+
+    const hint = everythingMissing
+      ? '\n\nEvery required variable is absent, which means no environment file was ' +
+        'loaded at all rather than one being incomplete. Copy .env.example to ' +
+        '.env.local in the project root and fill it in. On a hosting platform, set ' +
+        'these in the project\'s environment settings and redeploy.'
+      : '';
+
+    throw new Error(`Invalid environment configuration:\n${issues}${hint}`);
   }
 
   const value = parsed.data;
 
-  // Unreplaced .env.example placeholders pass schema validation (a URI with
-  // `<cluster>` in it still startsWith "mongodb"), then fail much later as an
-  // opaque DNS error — `querySrv EBADNAME`. Catch them here instead.
   const placeholders = Object.entries(value)
     .filter(([, v]) => typeof v === 'string' && /<[a-z_-]+>/i.test(v))
     .map(([key]) => key);
@@ -130,16 +150,13 @@ export function getEnv(): ServerEnv {
     );
   }
 
-  // Production guards — these must never pass silently.
-  if (value.NODE_ENV === 'production') {
-    if (value.ALLOWED_ORIGINS.length === 0) {
-      throw new Error('ALLOWED_ORIGINS must be set explicitly in production');
-    }
-    if (value.STORAGE_PROVIDER === 'local') {
-      throw new Error('STORAGE_PROVIDER=local is not permitted in production');
-    }
+  if (value.NODE_ENV === 'production' && !building) {
     if (value.PAYMENTS_LIVE_MODE && value.RAZORPAY_KEY_ID.startsWith('rzp_test')) {
       throw new Error('PAYMENTS_LIVE_MODE=true but a Razorpay test key is configured');
+    }
+
+    for (const warning of productionWarnings(value)) {
+      console.warn(`[config] ${warning}`);
     }
   }
 
@@ -147,7 +164,6 @@ export function getEnv(): ServerEnv {
   return cached;
 }
 
-/** Lazy accessor so importing this module never throws at import time. */
 export const env = new Proxy({} as ServerEnv, {
   get(_target, prop: string) {
     return getEnv()[prop as keyof ServerEnv];

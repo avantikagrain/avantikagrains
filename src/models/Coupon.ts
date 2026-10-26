@@ -1,7 +1,3 @@
-// mongoose is a CommonJS package. With "type": "module" in package.json,
-// named ESM imports of its runtime exports fail under plain Node (tsx, seed
-// scripts) even though bundlers paper over it — so take the default export
-// and destructure. Types are erased at compile time and import normally.
 import mongoose, { type Model, type Types } from 'mongoose';
 
 const { Schema, model, models } = mongoose;
@@ -14,14 +10,14 @@ export interface ICoupon {
   code: string;
   description?: string;
   type: CouponType;
-  /** Percentage (0–100) for `percentage`, otherwise unused. */
+
   valuePercent?: number;
-  /** Paise for `fixed_amount`, otherwise unused. */
+
   valuePaise?: number;
-  /** Caps the rupee value of a percentage coupon. */
+
   maxDiscountPaise?: number;
   minOrderPaise: number;
-  /** Null means unlimited. */
+
   totalUsageLimit?: number;
   perUserUsageLimit: number;
   usedCount: number;
@@ -29,7 +25,7 @@ export interface ICoupon {
   appliesToProducts: Types.ObjectId[];
   excludedProducts: Types.ObjectId[];
   firstOrderOnly: boolean;
-  /** COD orders are commonly excluded from aggressive discounts. */
+
   allowedPaymentMethods: ('razorpay' | 'cod')[];
   startsAt: Date;
   endsAt?: Date;
@@ -91,7 +87,6 @@ couponSchema.pre('validate', function requireValueForType(next) {
   next();
 });
 
-/** Usable right now? Per-user limits are checked separately in the service. */
 couponSchema.methods.isRedeemable = function (this: ICoupon): boolean {
   const now = new Date();
   if (!this.isActive) return false;

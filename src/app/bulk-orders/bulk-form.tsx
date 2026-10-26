@@ -1,15 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-
-/**
- * Bulk enquiry form.
- *
- * Every state the submission can be in is rendered: idle, submitting,
- * field-level validation errors returned by the server, a transport
- * failure, and success with the reference number. A form that only handles
- * the happy path is the most common way an enquiry silently disappears.
- */
+import { MessageCircle } from 'lucide-react';
+import { siteContact } from '@/config/site';
+import { bulkEnquiryMessage, buildWhatsappLink } from '@/lib/whatsapp';
 
 const PURPOSES = [
   ['wholesale', 'Wholesale / distribution'],
@@ -27,6 +21,7 @@ export function BulkForm() {
   const [reference, setReference] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
+  const [whatsappLink, setWhatsappLink] = useState<string | null>(null);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -46,7 +41,6 @@ export function BulkForm() {
       const payload = await response.json();
 
       if (!response.ok) {
-        // 422 carries per-field detail; everything else is a single message.
         const details = payload?.error?.details;
         if (Array.isArray(details)) {
           setFieldErrors(
@@ -62,11 +56,28 @@ export function BulkForm() {
         return;
       }
 
-      setReference(payload.data.reference);
+      const ref = payload.data.reference as string;
+      setReference(ref);
+      setWhatsappLink(
+        buildWhatsappLink({
+          message: bulkEnquiryMessage({
+            companyName: String(data.companyName ?? ''),
+            contactName: String(data.contactName ?? ''),
+            phone: String(data.phone ?? ''),
+            email: data.email ? String(data.email) : undefined,
+            city: data.city ? String(data.city) : undefined,
+            productInterest: String(data.productsNeeded ?? ''),
+            estimatedQuantity: String(data.estimatedMonthlyVolume ?? 'To be discussed'),
+            frequency: data.packFormat ? String(data.packFormat) : undefined,
+            message: data.message ? String(data.message) : undefined,
+            referenceId: ref,
+          }),
+        }),
+      );
       setState('sent');
     } catch {
       setFormError(
-        'Could not reach the server. Check your connection, or email avantikagrain@gmail.com.',
+        `Could not reach the server. Check your connection, or email ${siteContact.salesEmail}.`,
       );
       setState('idle');
     }
@@ -81,13 +92,32 @@ export function BulkForm() {
           <span className="tabular-nums text-[var(--fg)]">{reference}</span>. Quote it in
           any follow-up. The mill replies to bulk enquiries within two working days.
         </p>
+
+        {whatsappLink && (
+          <>
+            <p className="measure mt-6 text-spec text-[var(--fg-muted)]">
+              Need a faster response? Send the same details over WhatsApp.
+            </p>
+            <a
+              href={whatsappLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex h-11 items-center gap-2 rounded-[var(--radius-control)] bg-[var(--accent)] px-6 text-spec text-[var(--color-cream-50)] transition-colors duration-[var(--t-fast)] hover:bg-[var(--accent-bright)]"
+            >
+              <MessageCircle size={16} strokeWidth={1.8} />
+              Continue on WhatsApp
+            </a>
+          </>
+        )}
+
         <button
           type="button"
           onClick={() => {
             setState('idle');
             setReference(null);
+            setWhatsappLink(null);
           }}
-          className="mt-6 text-spec text-[var(--accent)] underline decoration-1 underline-offset-4"
+          className="mt-6 block text-spec text-[var(--accent)] underline decoration-1 underline-offset-4"
         >
           Send another enquiry
         </button>
@@ -181,7 +211,6 @@ export function BulkForm() {
           />
         </label>
 
-        {/* Honeypot: hidden from people, irresistible to bots. */}
         <div aria-hidden className="absolute left-[-9999px] h-0 w-0 overflow-hidden">
           <label>
             Website
@@ -203,6 +232,24 @@ export function BulkForm() {
         )}
         {busy ? 'Sending' : 'Send enquiry'}
       </button>
+
+      {siteContact.whatsappNumber && (
+        <p className="mt-6 text-spec text-[var(--fg-faint)]">
+          Prefer to talk first?{' '}
+          <a
+            href={
+              buildWhatsappLink({
+                message: `Hello ${siteContact.tradingName}, I would like to discuss a bulk order.`,
+              }) ?? '#'
+            }
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-[var(--accent)] underline underline-offset-4"
+          >
+            Message us on WhatsApp
+          </a>
+        </p>
+      )}
 
       <p aria-live="polite" className="sr-only">
         {busy ? 'Sending your enquiry' : ''}

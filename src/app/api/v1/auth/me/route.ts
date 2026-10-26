@@ -7,7 +7,6 @@ import { permissionsFor } from '@/lib/auth/rbac';
 
 export const dynamic = 'force-dynamic';
 
-/** The signed-in user's own profile and addresses. */
 export const GET = route(async () => {
   const session = await requireSession();
   await connectDB();

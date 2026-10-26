@@ -1,8 +1,6 @@
-// mongoose is a CommonJS package. With "type": "module" in package.json,
-// named ESM imports of its runtime exports fail under plain Node (tsx, seed
-// scripts) even though bundlers paper over it — so take the default export
-// and destructure. Types are erased at compile time and import normally.
 import mongoose, { type Model, type Types } from 'mongoose';
+
+import { MAX_ITEM_QUANTITY } from '@/lib/limits';
 
 const { Schema, model, models } = mongoose;
 
@@ -33,10 +31,6 @@ export const PAYMENT_STATUSES = [
 ] as const;
 export type OrderPaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
-/**
- * Legal, auditable state machine. Any transition not listed here is rejected
- * at the model layer, so no service or admin action can skip a step.
- */
 export const ALLOWED_TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> = {
   pending_payment: ['confirmed', 'cancelled'],
   confirmed: ['processing', 'cancelled'],
@@ -53,11 +47,6 @@ export function canTransition(from: OrderStatus, to: OrderStatus): boolean {
   return ALLOWED_TRANSITIONS[from]?.includes(to) ?? false;
 }
 
-/**
- * Immutable snapshot of a line item. Once written it is never updated —
- * if the catalogue price changes tomorrow, this order still shows what the
- * customer actually agreed to pay.
- */
 export interface IOrderItem {
   product: Types.ObjectId;
   variantId: Types.ObjectId;
@@ -105,16 +94,10 @@ export interface IOrder {
   shippingAddress: IOrderAddressSnapshot;
   billingAddress: IOrderAddressSnapshot;
 
-  // Every figure below is computed server-side. Nothing here is ever
-  // accepted from the browser.
   subtotalPaise: number;
   discountPaise: number;
   shippingPaise: number;
-  /**
-   * GST amount. When `taxInclusive` is true (Indian B2C default) this is the
-   * tax CONTAINED WITHIN subtotal + shipping, recorded for the invoice — it
-   * is not added again when computing the total.
-   */
+
   taxPaise: number;
   taxInclusive: boolean;
   codFeePaise: number;
@@ -127,7 +110,6 @@ export interface IOrder {
   status: OrderStatus;
   statusHistory: IOrderStatusEvent[];
 
-  /** Client-supplied key that makes order creation safely retryable. */
   idempotencyKey: string;
 
   customerNote?: string;
@@ -159,7 +141,7 @@ const orderItemSchema = new Schema<IOrderItem>(
     localName: String,
     packSize: { type: String, required: true },
     imageUrl: String,
-    quantity: { type: Number, required: true, min: 1 },
+    quantity: { type: Number, required: true, min: 1, max: MAX_ITEM_QUANTITY },
     unitPricePaise: intPaise,
     unitMrpPaise: intPaise,
     lineSubtotalPaise: intPaise,
@@ -261,10 +243,6 @@ orderSchema.pre('validate', function requireContact(next) {
   next();
 });
 
-/**
- * Totals must reconcile. This is the last line of defence against a
- * mis-computed or tampered total reaching the payment gateway.
- */
 orderSchema.pre('validate', function verifyTotals(next) {
   const lineSum = this.items.reduce((s, i) => s + i.lineSubtotalPaise, 0);
   if (lineSum !== this.subtotalPaise) {
@@ -273,8 +251,6 @@ orderSchema.pre('validate', function verifyTotals(next) {
     );
   }
 
-  // With inclusive pricing the GST is already inside subtotal and shipping,
-  // so adding taxPaise here would charge it twice.
   const expected =
     this.subtotalPaise -
     this.discountPaise +
@@ -292,13 +268,10 @@ orderSchema.pre('validate', function verifyTotals(next) {
     return next(new Error('discount cannot exceed subtotal'));
   }
 
-  // Inclusive tax can never exceed the amount it is supposedly contained in.
   if (this.taxInclusive && this.taxPaise > this.totalPaise) {
     return next(new Error('inclusive taxPaise cannot exceed totalPaise'));
   }
 
-  // Line-level tax must sum to the order-level figure, or the invoice and
-  // the GST return will disagree.
   const lineTaxSum = this.items.reduce((s, i) => s + i.lineTaxPaise, 0);
   if (lineTaxSum > this.taxPaise) {
     return next(
@@ -308,7 +281,6 @@ orderSchema.pre('validate', function verifyTotals(next) {
   next();
 });
 
-/** COD orders are never marked as paid online. */
 orderSchema.pre('validate', function guardCodPaymentStatus(next) {
   if (this.paymentMethod === 'cod' && this.paymentStatus === 'paid') {
     return next(
@@ -321,7 +293,6 @@ orderSchema.pre('validate', function guardCodPaymentStatus(next) {
   next();
 });
 
-/** Line items are immutable once the order exists. */
 orderSchema.pre('save', function freezeItems(next) {
   if (!this.isNew && this.isModified('items')) {
     return next(new Error('Order items are immutable and cannot be modified after creation'));
@@ -332,7 +303,6 @@ orderSchema.pre('save', function freezeItems(next) {
   next();
 });
 
-/** Enforce the status state machine and keep the audit trail in sync. */
 orderSchema.pre('save', function enforceTransition(next) {
   if (this.isNew) {
     this.statusHistory = [{ status: this.status, at: new Date(), bySystem: 'order-created' }];

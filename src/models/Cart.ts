@@ -1,8 +1,6 @@
-// mongoose is a CommonJS package. With "type": "module" in package.json,
-// named ESM imports of its runtime exports fail under plain Node (tsx, seed
-// scripts) even though bundlers paper over it — so take the default export
-// and destructure. Types are erased at compile time and import normally.
 import mongoose, { type Model, type Types } from 'mongoose';
+
+import { MAX_ITEM_QUANTITY } from '@/lib/limits';
 
 const { Schema, model, models } = mongoose;
 
@@ -10,11 +8,7 @@ export interface ICartItem {
   product: Types.ObjectId;
   variantId: Types.ObjectId;
   quantity: number;
-  /**
-   * Price seen by the customer when the item was added. Used ONLY to detect
-   * a price change and warn them — the authoritative price at checkout is
-   * always re-read from the Product document.
-   */
+
   priceAtAddPaise: number;
   addedAt: Date;
 }
@@ -22,7 +16,7 @@ export interface ICartItem {
 export interface ICart {
   _id: Types.ObjectId;
   user?: Types.ObjectId;
-  /** Opaque cookie id for guests; merged into the user cart on login. */
+
   guestToken?: string;
   items: ICartItem[];
   appliedCouponCode?: string;
@@ -39,7 +33,7 @@ const cartItemSchema = new Schema<ICartItem>(
       type: Number,
       required: true,
       min: 1,
-      max: 99,
+      max: MAX_ITEM_QUANTITY,
       validate: { validator: Number.isInteger, message: 'quantity must be an integer' },
     },
     priceAtAddPaise: {
@@ -62,7 +56,7 @@ const cartSchema = new Schema<ICart>(
     expiresAt: {
       type: Date,
       required: true,
-      // Guests: 30 days. Refreshed on every mutation.
+
       default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     },
   },
@@ -71,7 +65,7 @@ const cartSchema = new Schema<ICart>(
 
 cartSchema.index({ user: 1 }, { unique: true, sparse: true });
 cartSchema.index({ guestToken: 1 }, { unique: true, sparse: true });
-// TTL index — MongoDB reaps abandoned guest carts automatically.
+
 cartSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 cartSchema.pre('validate', function requireOwner(next) {
@@ -81,7 +75,6 @@ cartSchema.pre('validate', function requireOwner(next) {
   next();
 });
 
-/** The same variant must never appear twice — quantities are merged instead. */
 cartSchema.pre('save', function dedupeItems(next) {
   if (!this.isModified('items')) return next();
 
@@ -90,7 +83,7 @@ cartSchema.pre('save', function dedupeItems(next) {
     const key = `${item.product.toString()}:${item.variantId.toString()}`;
     const existing = merged.get(key);
     if (existing) {
-      existing.quantity = Math.min(99, existing.quantity + item.quantity);
+      existing.quantity = Math.min(MAX_ITEM_QUANTITY, existing.quantity + item.quantity);
     } else {
       merged.set(key, item);
     }

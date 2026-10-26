@@ -9,13 +9,6 @@ export const metadata: Metadata = {
     'The five stages between field and pack at Avantika Grain Mills: sourcing, optical selection, dry cleaning, cold milling and laser-monitored refinement.',
 };
 
-/**
- * Process content is drawn from the stages Avantika publishes on its own
- * site. Figures that the business has not yet evidenced (purity benchmark,
- * certifications) are presented as the mill's stated standard, and the
- * verification note at the foot says so plainly rather than implying
- * third-party audit.
- */
 const STAGES = [
   {
     title: 'Source',
@@ -72,16 +65,7 @@ const STAGES = [
 export default function ManufacturingPage() {
   return (
     <>
-      {/*
-        Banner header.
 
-        `hero.webp` is a macro wheat texture with no type drawn into it, so
-        the page's own heading can sit on it. The mill's own photography —
-        the floor, the optical sorter, the rollers — is still outstanding
-        (see IMAGE-MANIFEST.md); when it arrives this is the first place it
-        should go, because a process page illustrated with the raw material
-        is weaker than one illustrated with the process.
-      */}
       <header className="relative isolate overflow-hidden">
         <Image
           src="/brand/hero.webp"
@@ -123,13 +107,7 @@ export default function ManufacturingPage() {
             key={stage.title}
             className="group reveal grid gap-8 border-b border-[var(--hairline)] py-14 lg:grid-cols-[7rem_1fr_21rem] lg:gap-14 lg:py-20"
           >
-            {/*
-              The stage number sticks while its own section scrolls past,
-              then gets pushed out by the next one. It costs no JavaScript —
-              `position: sticky` does the whole thing — and it makes a long
-              page of five stages feel like a sequence you are moving
-              through rather than five articles stacked up.
-            */}
+
             <div className="lg:sticky lg:top-28 lg:self-start">
               <p className="text-micro uppercase tracking-[var(--tracking-label)] text-[var(--fg-faint)]">
                 Stage {i + 1} / {STAGES.length}
@@ -158,16 +136,6 @@ export default function ManufacturingPage() {
               <p className="measure mt-6 leading-relaxed text-[var(--fg-muted)]">{stage.body}</p>
             </div>
 
-            {/*
-              Specs in their own panel so the eye can tell prose from
-              figures without reading either. The gold edge wipes in on
-              hover, which is the same signal the product cards use.
-            */}
-            {/*
-              `spec-stacked` puts the label above the value: this column is
-              21rem, and side by side the value gets about eight characters
-              before it wraps.
-            */}
             <dl className="panel panel-hover gold-edge h-fit self-start rounded-[var(--radius-panel)] px-5 pb-2 pt-1">
               {stage.specs.map(([label, value]) => (
                 <div key={label} className="spec spec-stacked">

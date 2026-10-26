@@ -7,13 +7,6 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-/**
- * 404.
- *
- * Without this file Next serves its own unstyled default, which on a
- * storefront reads as a broken site rather than a wrong address. The useful
- * thing to offer someone who mistyped a product URL is the catalogue.
- */
 export default function NotFound() {
   return (
     <main className="mx-auto flex min-h-[70vh] max-w-[86rem] flex-col items-center justify-center px-5 py-24 text-center sm:px-8">

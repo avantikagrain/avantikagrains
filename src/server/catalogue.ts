@@ -2,17 +2,9 @@ import 'server-only';
 import { connectDB } from '@/lib/db';
 import { Category, Product } from '@/models';
 
-/**
- * Data access for server components.
- *
- * Product pages read MongoDB directly rather than calling our own HTTP API.
- * A server component fetching its own API means an extra network hop, a
- * second serialisation round-trip and a worse LCP, for no benefit — the
- * REST routes exist for the browser and for future clients, not for us.
- */
-
 export interface ProductCardData {
   slug: string;
+  productId: string;
   name: string;
   localName?: string;
   tag?: string;
@@ -28,7 +20,8 @@ export interface ProductCardData {
 
 function toCard(p: Record<string, unknown>): ProductCardData {
   const product = p as never as {
-    slug: string; name: string; localName?: string; tag?: string;
+    _id: { toString(): string };
+    slug: string; name: string;  localName?: string; tag?: string;
     shortDescription: string;
     images: { url: string; alt: string }[];
     variants: {
@@ -39,7 +32,8 @@ function toCard(p: Record<string, unknown>): ProductCardData {
 
   const variant = product.variants.find((v) => v.isActive) ?? product.variants[0];
 
-  return {
+   return {
+    productId: product._id.toString(),
     slug: product.slug,
     name: product.name,
     localName: product.localName,
@@ -55,17 +49,6 @@ function toCard(p: Record<string, unknown>): ProductCardData {
   };
 }
 
-/**
- * Catalogue pages use ISR, which means Next prerenders them during
- * `next build` — and that needs a reachable database and a full environment
- * at build time.
- *
- * On a VPS that is a real fragility: a CI image or a deploy that builds
- * before secrets are mounted would fail outright. During the build phase
- * only, a data failure degrades to an empty page and a loud warning; the
- * first revalidation after boot fills it in. At runtime the error is NOT
- * swallowed — an empty catalogue in production must surface, not hide.
- */
 async function buildSafe<T>(label: string, query: () => Promise<T>, fallback: T): Promise<T> {
   try {
     return await query();
@@ -136,8 +119,9 @@ export async function getProductBySlug(slug: string) {
   if (!doc) return null;
 
   const category = doc.category as unknown as { name: string; slug: string } | null;
-
+  
   return {
+    id: doc._id.toString(),
     slug: doc.slug,
     name: doc.name,
     localName: doc.localName,
@@ -147,16 +131,8 @@ export async function getProductBySlug(slug: string) {
     images: doc.images.map((i) => ({
       url: i.url,
       alt: i.alt,
-      // Carried through so the product page can render the attribution that
-      // stock-photo licensing requires.
-      credit: i.credit
-        ? {
-            photographer: i.credit.photographer,
-            photographerUrl: i.credit.photographerUrl,
-            source: i.credit.source,
-            sourceUrl: i.credit.sourceUrl,
-          }
-        : null,
+      width: i.width,
+      height: i.height,
     })),
     category: category ? { name: category.name, slug: category.slug } : null,
     specifications: doc.specifications.map((s) => ({ label: s.label, value: s.value })),
@@ -190,12 +166,4 @@ export async function listCategories() {
     },
     [] as { name: string; slug: string }[],
   );
-}
-
-/** True while the store is running on demo stand-ins — drives the UI banner. */
-export async function isDemoMode(): Promise<boolean> {
-  await connectDB();
-  const { StoreSettings } = await import('@/models');
-  const settings = await StoreSettings.findOne({ key: 'default' }).select('demoDataInUse').lean();
-  return settings?.demoDataInUse ?? false;
 }

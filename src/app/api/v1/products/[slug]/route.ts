@@ -46,8 +46,7 @@ export const GET = route(
           lowStock: v.availableQty > 0 && v.availableQty <= v.lowStockThreshold,
         })),
       specifications: product.specifications,
-      // Statutory disclosures are shown on the product page because food
-      // labelling rules require them to be visible before purchase.
+
       foodDisclosures: {
         manufacturerName: product.foodDisclosures?.manufacturerName,
         manufacturerAddress: product.foodDisclosures?.manufacturerAddress,

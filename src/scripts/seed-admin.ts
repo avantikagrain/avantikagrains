@@ -1,12 +1,3 @@
-/**
- * Creates the first owner account.
- *
- *   npm run seed:admin -- owner@example.com 'a-strong-password'
- *
- * The owner role is the only one that can change gateway credentials or
- * grant roles, so this script refuses to create a second one — further
- * staff are invited from the admin dashboard, not seeded.
- */
 import { connectDB, disconnectDB } from '@/lib/db';
 import { User } from '@/models';
 import { hashPassword } from '@/lib/auth/password';

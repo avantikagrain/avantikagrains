@@ -1,18 +1,6 @@
-// mongoose is a CommonJS package. With "type": "module" in package.json,
-// named ESM imports of its runtime exports fail under plain Node (tsx, seed
-// scripts) even though bundlers paper over it — so take the default export
-// and destructure. Types are erased at compile time and import normally.
 import mongoose, { type Model, type Types } from 'mongoose';
 
 const { Schema, model, models } = mongoose;
-
-/**
- * Append-only record of every privileged action.
- *
- * Required for any dispute about who changed a price, approved a refund or
- * granted a role. Writes here are never conditional on the action
- * succeeding — a failed attempt is itself worth recording.
- */
 
 export interface IAdminAuditLog {
   _id: Types.ObjectId;
@@ -22,7 +10,7 @@ export interface IAdminAuditLog {
   action: string;
   resourceType: string;
   resourceId?: string;
-  /** Field-level before/after. Secrets are stored as '[REDACTED]'. */
+
   changes?: { field: string; before: unknown; after: unknown }[];
   outcome: 'success' | 'denied' | 'error';
   reason?: string;

@@ -6,17 +6,6 @@ import { hashPassword, needsRehash, verifyPassword } from '@/lib/auth/password';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '@/lib/auth/jwt';
 import { logger } from '@/lib/logger';
 
-/**
- * Authentication.
- *
- * Two behaviours here are deliberate and look odd without explanation:
- *
- *  - Login failures never say whether the email exists. "No such account"
- *    hands an attacker a list of valid customers.
- *  - A wrong password on a non-existent account still costs a bcrypt
- *    comparison, so response time does not reveal which case it was.
- */
-
 const MAX_FAILED_ATTEMPTS = 8;
 const LOCK_DURATION_MS = 15 * 60 * 1000;
 
@@ -30,8 +19,6 @@ export interface AuthResult extends AuthTokens {
 }
 
 async function issueTokens(user: IUser): Promise<AuthTokens> {
-  // A fresh family id on every login means a refresh token stolen from one
-  // session cannot be replayed after the user logs in again elsewhere.
   const family = randomUUID();
 
   await User.updateOne({ _id: user._id }, { refreshTokenFamily: family });
@@ -60,9 +47,6 @@ export async function register(input: {
 
   const existing = await User.findOne({ email });
   if (existing) {
-    // Registration necessarily reveals that an email is taken, but the
-    // message stays neutral and suggests signing in rather than confirming
-    // account details.
     throw new AppError('CONFLICT', 'That email is already registered. Try signing in instead.');
   }
 
@@ -97,13 +81,11 @@ export async function login(input: {
 
   const email = input.email.trim().toLowerCase();
 
-  // passwordHash is select:false on the schema, so it must be asked for.
   const user = await User.findOne({ email }).select('+passwordHash');
 
   const GENERIC = 'Email or password is incorrect';
 
   if (!user) {
-    // Burn comparable time so a missing account is not detectable.
     await verifyPassword(input.password, '');
     throw new AppError('UNAUTHENTICATED', GENERIC);
   }
@@ -136,7 +118,6 @@ export async function login(input: {
     throw new AppError('UNAUTHENTICATED', GENERIC);
   }
 
-  // Transparently upgrade the hash if the cost factor has since been raised.
   const patch: Record<string, unknown> = {
     failedLoginAttempts: 0,
     lockedUntil: undefined,
@@ -158,13 +139,6 @@ export async function login(input: {
   };
 }
 
-/**
- * Rotates a refresh token.
- *
- * If the presented token's family does not match the stored one, the token
- * is a replay of an older session — every session for that user is revoked
- * rather than quietly issuing a new pair.
- */
 export async function refresh(refreshToken: string): Promise<AuthTokens> {
   await connectDB();
 
@@ -217,7 +191,7 @@ export async function changePassword(
     { _id: userId },
     {
       passwordHash: await hashPassword(newPassword),
-      // Changing a password signs out every other device.
+
       $unset: { refreshTokenFamily: 1 },
     },
   );

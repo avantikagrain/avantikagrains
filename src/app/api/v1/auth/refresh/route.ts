@@ -17,8 +17,6 @@ export const POST = route(async () => {
     await setSessionCookies(tokens.accessToken, tokens.refreshToken);
     return ok({ refreshed: true });
   } catch (err) {
-    // A rejected refresh must also clear the cookies, or the browser keeps
-    // retrying with a token that will never work again.
     await clearSessionCookies();
     throw err;
   }

@@ -1,7 +1,3 @@
-// mongoose is a CommonJS package. With "type": "module" in package.json,
-// named ESM imports of its runtime exports fail under plain Node (tsx, seed
-// scripts) even though bundlers paper over it — so take the default export
-// and destructure. Types are erased at compile time and import normally.
 import mongoose, { type Model, type Types } from 'mongoose';
 
 const { Schema, model, models } = mongoose;
@@ -22,18 +18,7 @@ export interface IRefund {
   amountPaise: number;
   reason: string;
   status: 'pending' | 'processed' | 'failed';
-  /**
-   * Where the refund was started.
-   *
-   * 'internal' — someone pressed refund in our own admin, so a staff user
-   * is accountable for it and `requestedBy` is required.
-   *
-   * 'gateway'  — it was started in the Razorpay dashboard and we learned
-   * about it from a signed webhook. There is no local user to attribute it
-   * to, but the money has moved, so it must still be recorded: otherwise
-   * `amountRefundedPaise` stays behind reality and a fully refunded order
-   * reads as partially refunded for ever.
-   */
+
   source: 'internal' | 'gateway';
   requestedBy?: Types.ObjectId;
   approvedBy?: Types.ObjectId;
@@ -46,27 +31,24 @@ export interface IPayment {
   _id: Types.ObjectId;
   order: Types.ObjectId;
   provider: 'razorpay' | 'cod';
-  /** Gateway order id (Razorpay `order_xxx`). Absent for COD. */
+
   providerOrderId?: string;
-  /** Gateway payment id (Razorpay `pay_xxx`), set once authorised. */
+
   providerPaymentId?: string;
   amountPaise: number;
   amountRefundedPaise: number;
   currency: 'INR';
   status: PaymentRecordStatus;
-  /** e.g. upi / card / netbanking — reported by the gateway, never guessed. */
+
   method?: string;
-  /**
-   * True only after server-side signature verification or a verified
-   * webhook. A browser redirect alone never sets this.
-   */
+
   verifiedServerSide: boolean;
   verifiedAt?: Date;
   verificationSource?: 'checkout_signature' | 'webhook' | 'reconciliation' | 'manual';
   failureCode?: string;
   failureDescription?: string;
   refunds: IRefund[];
-  /** Trimmed gateway response kept for reconciliation. Never card data. */
+
   providerSnapshot?: Record<string, unknown>;
   createdAt: Date;
   updatedAt: Date;
@@ -87,9 +69,7 @@ const refundSchema = new Schema<IRefund>(
     requestedBy: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      // Required for refunds we start ourselves — a refund nobody is
-      // accountable for is an audit hole. A gateway-initiated refund has no
-      // local user by definition, so it is exempt.
+
       required(this: IRefund) {
         return this.source !== 'gateway';
       },
@@ -143,7 +123,6 @@ paymentSchema.index({ providerPaymentId: 1 }, { unique: true, sparse: true });
 paymentSchema.index({ status: 1, createdAt: -1 });
 paymentSchema.index({ verifiedServerSide: 1, status: 1 });
 
-/** A payment may never be marked captured without server-side verification. */
 paymentSchema.pre('validate', function requireVerification(next) {
   if (this.status === 'captured' && this.provider === 'razorpay' && !this.verifiedServerSide) {
     return next(
@@ -153,7 +132,6 @@ paymentSchema.pre('validate', function requireVerification(next) {
   next();
 });
 
-/** Refunds can never exceed what was actually collected. */
 paymentSchema.pre('validate', function capRefunds(next) {
   const processed = this.refunds
     .filter((r) => r.status !== 'failed')

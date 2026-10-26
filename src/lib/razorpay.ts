@@ -3,22 +3,6 @@ import Razorpay from 'razorpay';
 import { getEnv } from './env';
 import { AppError } from './errors';
 
-/**
- * Razorpay adapter.
- *
- * Two different signatures exist and they are NOT interchangeable:
- *
- *  1. Checkout handler signature — HMAC-SHA256 of `order_id|payment_id`
- *     keyed with the API **key secret**. Proves the browser handler payload
- *     was not tampered with.
- *  2. Webhook signature — HMAC-SHA256 of the **raw request body** keyed with
- *     the **webhook secret** (a different value), delivered in the
- *     `X-Razorpay-Signature` header.
- *
- * Neither one, on its own, is proof of settlement. Capture status is read
- * back from the API or taken from a verified `payment.captured` webhook.
- */
-
 let client: Razorpay | null = null;
 
 export function razorpay(): Razorpay {
@@ -32,15 +16,10 @@ export function razorpay(): Razorpay {
   return client;
 }
 
-/**
- * Constant-time comparison. A plain `===` on signatures leaks timing
- * information that can be used to forge one byte at a time.
- */
 function safeCompare(a: string, b: string): boolean {
   const bufA = Buffer.from(a, 'utf8');
   const bufB = Buffer.from(b, 'utf8');
-  // timingSafeEqual throws on length mismatch, so length is checked first —
-  // signature length is not secret.
+
   if (bufA.length !== bufB.length) return false;
   return crypto.timingSafeEqual(bufA, bufB);
 }
@@ -55,7 +34,6 @@ export interface CheckoutHandlerPayload {
   razorpay_signature: string;
 }
 
-/** Verifies the payload the Razorpay Checkout handler posts back. */
 export function verifyCheckoutSignature(
   payload: CheckoutHandlerPayload,
   keySecret = getEnv().RAZORPAY_KEY_SECRET,
@@ -67,16 +45,6 @@ export function verifyCheckoutSignature(
   return safeCompare(expected, razorpay_signature);
 }
 
-/**
- * Verifies a webhook delivery.
- *
- * `rawBody` must be the exact bytes received. Re-serialising the parsed JSON
- * changes key order and whitespace, which changes the hash — this is the
- * single most common cause of "valid webhooks failing verification".
- *
- * `previousSecret` supports rotation: Razorpay retries older deliveries
- * signed with the secret that was active when they were first sent.
- */
 export function verifyWebhookSignature(
   rawBody: string,
   signature: string | null,
@@ -92,9 +60,8 @@ export function verifyWebhookSignature(
 }
 
 export interface CreateGatewayOrderInput {
-  /** Integer paise — Razorpay's own unit, so no conversion happens here. */
   amountPaise: number;
-  /** Our order number, so a gateway record can be traced back. */
+
   receipt: string;
   notes?: Record<string, string>;
 }
@@ -103,7 +70,6 @@ export async function createGatewayOrder(input: CreateGatewayOrderInput) {
   const { amountPaise, receipt, notes } = input;
 
   if (!Number.isInteger(amountPaise) || amountPaise < 100) {
-    // Razorpay rejects amounts below ₹1.
     throw new AppError('BAD_REQUEST', 'Payment amount must be at least ₹1');
   }
 
@@ -113,8 +79,7 @@ export async function createGatewayOrder(input: CreateGatewayOrderInput) {
       currency: 'INR',
       receipt,
       notes,
-      // Capture automatically on authorisation — avoids a separate capture
-      // call and the window where an authorised payment is never captured.
+
       payment_capture: true,
     });
   } catch (err) {
@@ -126,7 +91,6 @@ export async function createGatewayOrder(input: CreateGatewayOrderInput) {
   }
 }
 
-/** Reads authoritative payment state back from Razorpay. */
 export async function fetchGatewayPayment(paymentId: string) {
   try {
     return await razorpay().payments.fetch(paymentId);
@@ -158,7 +122,6 @@ export async function createGatewayRefund(
   }
 }
 
-/** Webhook events this application acts on. Anything else is recorded and ignored. */
 export const HANDLED_WEBHOOK_EVENTS = [
   'payment.captured',
   'payment.failed',

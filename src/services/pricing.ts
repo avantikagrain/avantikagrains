@@ -3,20 +3,8 @@ import { connectDB } from '@/lib/db';
 import { Coupon, Order, Product, StoreSettings, type IStoreSettings } from '@/models';
 import { AppError, badRequest, outOfStock } from '@/lib/errors';
 import { addPaise, assertPaise, multiplyPaise, percentOf } from '@/lib/money';
+import { MAX_ITEM_QUANTITY } from '@/lib/limits';
 import type { PaymentMethod } from '@/models/Order';
-
-/**
- * The single source of truth for what an order costs.
- *
- * Nothing in this module reads a price, discount, tax or total from the
- * request. Everything is recomputed from the database on every call, and the
- * result of this function is what gets written to the Order and sent to the
- * payment gateway.
- *
- * Indian B2C retail convention: displayed prices are GST-inclusive. Tax is
- * therefore *extracted* from the price, not added on top — adding it on top
- * would overcharge every customer by the GST rate.
- */
 
 export interface QuoteItemInput {
   productId: string;
@@ -44,7 +32,7 @@ export interface QuoteLine {
   unitPricePaise: number;
   unitMrpPaise: number;
   lineSubtotalPaise: number;
-  /** Share of the order-level discount attributed to this line. */
+
   lineDiscountPaise: number;
   hsnCode?: string;
   gstRatePercent?: number;
@@ -62,7 +50,7 @@ export interface Quote {
   totalPaise: number;
   totalWeightGrams: number;
   couponCode?: string;
-  /** Non-fatal: shown to the customer, does not block checkout. */
+
   warnings: string[];
 }
 
@@ -79,11 +67,6 @@ async function loadSettings(): Promise<IStoreSettings> {
   return settings;
 }
 
-/**
- * Splits a GST-inclusive amount into taxable value and tax.
- * Rounding is applied to the tax component so the two always sum back to
- * the original amount — no stray paisa appears or disappears on an invoice.
- */
 export function splitInclusiveTax(
   inclusivePaise: number,
   ratePercent: number,
@@ -95,12 +78,6 @@ export function splitInclusiveTax(
   return { taxablePaise: taxable, taxPaise: inclusivePaise - taxable };
 }
 
-/**
- * Distributes an order-level discount across lines proportionally, with the
- * rounding remainder assigned to the largest line. Guarantees the parts sum
- * exactly to the whole — otherwise the Order model's reconciliation check
- * rejects the save.
- */
 export function allocateDiscount(
   lineSubtotals: number[],
   totalDiscount: number,
@@ -114,7 +91,6 @@ export function allocateDiscount(
 
   let remainder = totalDiscount - allocated.reduce((s, v) => s + v, 0);
 
-  // Hand the leftover paise to the largest lines, one at a time.
   const order = lineSubtotals
     .map((value, index) => ({ value, index }))
     .sort((a, b) => b.value - a.value);
@@ -122,13 +98,13 @@ export function allocateDiscount(
   let cursor = 0;
   while (remainder > 0) {
     const target = order[cursor % order.length].index;
-    // Never let a line's discount exceed the line itself.
+
     if (allocated[target] < lineSubtotals[target]) {
       allocated[target] += 1;
       remainder -= 1;
     }
     cursor += 1;
-    if (cursor > order.length * 2 + totalDiscount) break; // safety valve
+    if (cursor > order.length * 2 + totalDiscount) break;
   }
 
   return allocated;
@@ -212,7 +188,6 @@ async function resolveCouponDiscount(
     }
   }
 
-  // Restrict to the eligible subset of the cart, if the coupon is scoped.
   const scoped = coupon.appliesToProducts.length > 0 || coupon.appliesToCategories.length > 0;
   const eligibleSubtotal = scoped
     ? lines
@@ -243,7 +218,7 @@ async function resolveCouponDiscount(
       discount = Math.min(coupon.valuePaise ?? 0, eligibleSubtotal);
       break;
     case 'free_shipping':
-      // Handled by zeroing shipping, not by discounting goods.
+
       discount = 0;
       break;
   }
@@ -251,11 +226,6 @@ async function resolveCouponDiscount(
   return Math.min(discount, subtotal);
 }
 
-/**
- * Builds a priced quote. Called by the checkout preview AND by order
- * creation — the customer therefore cannot be shown one number and charged
- * another.
- */
 export async function quoteOrder(input: QuoteInput): Promise<Quote> {
   await connectDB();
 
@@ -264,12 +234,18 @@ export async function quoteOrder(input: QuoteInput): Promise<Quote> {
   const settings = await loadSettings();
   const warnings: string[] = [];
 
-  // --- Build line snapshots from database truth ----------------------------
   const lines: QuoteLine[] = [];
 
   for (const item of input.items) {
     if (!Number.isInteger(item.quantity) || item.quantity < 1) {
       throw badRequest('Quantity must be a positive whole number');
+    }
+
+    if (item.quantity > MAX_ITEM_QUANTITY) {
+      throw badRequest(
+        `A maximum of ${MAX_ITEM_QUANTITY} units per item is allowed. ` +
+          'Please raise a bulk enquiry for larger quantities.',
+      );
     }
 
     const product = await Product.findById(item.productId);
@@ -317,7 +293,6 @@ export async function quoteOrder(input: QuoteInput): Promise<Quote> {
 
   const subtotalPaise = addPaise(...lines.map((l) => l.lineSubtotalPaise));
 
-  // --- Coupon --------------------------------------------------------------
   let discountPaise = 0;
   let freeShipping = false;
 
@@ -343,10 +318,8 @@ export async function quoteOrder(input: QuoteInput): Promise<Quote> {
 
   const subtotalAfterDiscount = subtotalPaise - discountPaise;
 
-  // --- Shipping ------------------------------------------------------------
   const shippingPaise = freeShipping ? 0 : computeShipping(settings, subtotalAfterDiscount);
 
-  // --- COD fee -------------------------------------------------------------
   let codFeePaise = 0;
   if (input.paymentMethod === 'cod') {
     const cod = settings.cod;
@@ -370,19 +343,12 @@ export async function quoteOrder(input: QuoteInput): Promise<Quote> {
     codFeePaise = cod.feePaise;
   }
 
-  // --- Tax -----------------------------------------------------------------
-  // Prices are GST-inclusive, so tax is extracted from the discounted line
-  // value rather than added. taxPaise is reported for the invoice; it is
-  // already contained within subtotal - discount.
   let taxPaise = 0;
 
   if (settings.tax?.pricesIncludeTax !== false) {
     for (const line of lines) {
       const rate = line.gstRatePercent;
       if (rate === undefined) {
-        // Unreachable for active products (the Product model blocks
-        // publication without a rate) but left explicit rather than
-        // silently taxing at zero.
         warnings.push(`Tax rate missing for ${line.sku}; invoice will need manual correction`);
         continue;
       }
@@ -402,12 +368,6 @@ export async function quoteOrder(input: QuoteInput): Promise<Quote> {
     );
   }
 
-  // --- Total ---------------------------------------------------------------
-  // Tax is inclusive, so it is NOT added again here. The Order model
-  // reconciles: subtotal - discount + shipping + tax + codFee === total,
-  // which means taxPaise must be reported as 0 in the total arithmetic when
-  // prices already contain it. We therefore record tax separately for the
-  // invoice and keep the total honest.
   const totalPaise = subtotalAfterDiscount + shippingPaise + codFeePaise;
 
   return {
@@ -415,7 +375,7 @@ export async function quoteOrder(input: QuoteInput): Promise<Quote> {
     subtotalPaise,
     discountPaise,
     shippingPaise,
-    // Reported for display/invoice only — already inside the line prices.
+
     taxPaise,
     codFeePaise,
     totalPaise,

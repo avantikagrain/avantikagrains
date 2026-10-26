@@ -1,7 +1,3 @@
-/**
- * Barrel export. Importing this registers every schema with Mongoose, which
- * matters for `populate()` across models in a serverless/hot-reload runtime.
- */
 export { User, type IUser, type IAddress } from './User';
 export { Category, type ICategory } from './Category';
 export {

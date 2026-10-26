@@ -2,16 +2,6 @@ import 'server-only';
 import { connectDB } from '@/lib/db';
 import { Order, type OrderStatus } from '@/models';
 
-/**
- * Data access for the signed-in customer's own pages.
- *
- * Every query here is scoped by the session's user id, which the caller
- * takes from the verified JWT — never from a route parameter or a query
- * string. Scoping at the query means a customer cannot read another
- * customer's order even if an id leaks, rather than relying on a check
- * after the document is already loaded.
- */
-
 export interface OrderListItem {
   orderNumber: string;
   placedAt: string;
@@ -19,7 +9,7 @@ export interface OrderListItem {
   paymentMethod: 'razorpay' | 'cod';
   totalPaise: number;
   itemCount: number;
-  /** First few lines, for a recognisable summary without a second query. */
+
   preview: { name: string; packSize: string; quantity: number; imageUrl?: string }[];
 }
 
@@ -32,8 +22,6 @@ export async function listOrdersForUser(
   const docs = await Order.find({ user: userId })
     .sort({ placedAt: -1 })
     .limit(limit)
-    // Project only what the list renders. Orders carry addresses, payment
-    // references and an audit trail; none of it belongs in a list payload.
     .select('orderNumber placedAt status paymentMethod totalPaise items')
     .lean();
 
@@ -47,8 +35,7 @@ export async function listOrdersForUser(
 
     return {
       orderNumber: doc.orderNumber,
-      // Serialised for the client boundary — a Date would need a
-      // transform on every prop that crosses it.
+
       placedAt: new Date(doc.placedAt).toISOString(),
       status: doc.status,
       paymentMethod: doc.paymentMethod,
@@ -62,4 +49,100 @@ export async function listOrdersForUser(
       })),
     };
   });
+}
+
+export interface OrderDetailItem {
+  name: string;
+  packSize: string;
+  sku: string;
+  quantity: number;
+  unitPricePaise: number;
+  lineSubtotalPaise: number;
+  imageUrl?: string;
+}
+
+export interface OrderDetail {
+  orderNumber: string;
+  placedAt: string;
+  status: OrderStatus;
+  paymentMethod: 'razorpay' | 'cod';
+  paymentStatus: string;
+  items: OrderDetailItem[];
+  subtotalPaise: number;
+  discountPaise: number;
+  shippingPaise: number;
+  codFeePaise: number;
+  taxPaise: number;
+  totalPaise: number;
+  couponCode?: string;
+  customerNote?: string;
+  shippingAddress: {
+    fullName: string;
+    phone: string;
+    line1: string;
+    line2?: string;
+    landmark?: string;
+    city: string;
+    state: string;
+    pincode: string;
+  };
+  timeline: { status: OrderStatus; at: string; note?: string }[];
+}
+
+export async function getOrderForUser(
+  userId: string,
+  orderNumber: string,
+): Promise<OrderDetail | null> {
+  await connectDB();
+
+  const doc = await Order.findOne({
+    user: userId,
+    orderNumber: orderNumber.trim().toUpperCase(),
+  })
+    .select(
+      'orderNumber placedAt status paymentMethod paymentStatus items subtotalPaise discountPaise shippingPaise codFeePaise taxPaise totalPaise couponCode customerNote shippingAddress statusHistory',
+    )
+    .lean();
+
+  if (!doc) return null;
+
+  return {
+    orderNumber: doc.orderNumber,
+    placedAt: new Date(doc.placedAt).toISOString(),
+    status: doc.status,
+    paymentMethod: doc.paymentMethod,
+    paymentStatus: doc.paymentStatus,
+    items: (doc.items ?? []).map((item) => ({
+      name: item.name,
+      packSize: item.packSize,
+      sku: item.sku,
+      quantity: item.quantity,
+      unitPricePaise: item.unitPricePaise,
+      lineSubtotalPaise: item.lineSubtotalPaise,
+      imageUrl: item.imageUrl,
+    })),
+    subtotalPaise: doc.subtotalPaise,
+    discountPaise: doc.discountPaise,
+    shippingPaise: doc.shippingPaise,
+    codFeePaise: doc.codFeePaise,
+    taxPaise: doc.taxPaise,
+    totalPaise: doc.totalPaise,
+    couponCode: doc.couponCode,
+    customerNote: doc.customerNote,
+    shippingAddress: {
+      fullName: doc.shippingAddress.fullName,
+      phone: doc.shippingAddress.phone,
+      line1: doc.shippingAddress.line1,
+      line2: doc.shippingAddress.line2,
+      landmark: doc.shippingAddress.landmark,
+      city: doc.shippingAddress.city,
+      state: doc.shippingAddress.state,
+      pincode: doc.shippingAddress.pincode,
+    },
+    timeline: (doc.statusHistory ?? []).map((event) => ({
+      status: event.status,
+      at: new Date(event.at).toISOString(),
+      note: event.note,
+    })),
+  };
 }

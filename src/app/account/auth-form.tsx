@@ -5,15 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 
-/**
- * Sign in and registration.
- *
- * Both hit the real auth endpoints, which set HTTP-only cookies — no token
- * ever reaches JavaScript here. Field-level errors come back from the
- * server's Zod validation and are rendered against the right input rather
- * than collapsed into one generic message.
- */
-
 type Mode = 'login' | 'register';
 
 export function AuthForm({ mode }: { mode: Mode }) {
@@ -23,8 +14,6 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  // Where to land after signing in. Only same-site paths are honoured, so
-  // a crafted ?next=https://… cannot turn this into an open redirect.
   const rawNext = params.get('next') ?? '/account/orders';
   const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/account/orders';
 
@@ -61,8 +50,6 @@ export function AuthForm({ mode }: { mode: Mode }) {
         return;
       }
 
-      // The session cookie is set by the response; refresh so server
-      // components re-render with it before navigating.
       router.replace(next);
       router.refresh();
     } catch {

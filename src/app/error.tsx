@@ -4,18 +4,6 @@ import Link from 'next/link';
 import { useEffect } from 'react';
 import { RefreshCw, Phone } from 'lucide-react';
 
-/**
- * Render-error boundary for the whole storefront.
- *
- * Without this file an unhandled error — a database blip mid-request, say —
- * shows Next's own default screen, which looks like the site has fallen
- * over. This keeps the customer inside the brand, gives them a retry, and
- * gives them a way to reach a human if retrying does not help.
- *
- * `error.digest` is the only part of the error that is safe to show: it is
- * a server-side hash, so support can match it to a log line without any
- * internal detail reaching the browser.
- */
 export default function ErrorBoundary({
   error,
   reset,
@@ -24,8 +12,6 @@ export default function ErrorBoundary({
   reset: () => void;
 }) {
   useEffect(() => {
-    // The server already logged this with full context. Mirroring it to the
-    // browser console helps whoever is debugging a report from a customer.
     console.error('Storefront render error', error.digest ?? error.message);
   }, [error]);
 

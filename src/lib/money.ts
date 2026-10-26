@@ -1,18 +1,9 @@
-/**
- * All monetary values in this system are integer paise.
- *
- * Floating point rupees are never persisted, never summed and never sent to
- * a payment gateway. Razorpay itself expects paise, so paise is also the
- * wire format — no conversion at the gateway boundary.
- */
-
 export type Paise = number;
 
 const PAISE_PER_RUPEE = 100;
 
 export class MoneyError extends Error {}
 
-/** Guard used wherever an untrusted number enters the money domain. */
 export function assertPaise(value: unknown, label = 'amount'): asserts value is Paise {
   if (typeof value !== 'number' || !Number.isFinite(value)) {
     throw new MoneyError(`${label} must be a finite number`);
@@ -32,10 +23,7 @@ export function rupeesToPaise(rupees: number): Paise {
   if (!Number.isFinite(rupees)) {
     throw new MoneyError('rupees must be a finite number');
   }
-  // Naive Math.round(rupees * 100) loses a paisa on values that are not
-  // exactly representable in binary: 1.005 * 100 evaluates to
-  // 100.49999999999999 and rounds DOWN to 100. Normalising through a fixed
-  // decimal representation first removes the drift before rounding.
+
   const scaled = Number((rupees * PAISE_PER_RUPEE).toFixed(6));
   return Math.round(scaled);
 }
@@ -67,11 +55,6 @@ export function multiplyPaise(amount: Paise, quantity: number): Paise {
   return amount * quantity;
 }
 
-/**
- * Percentage of an amount, rounded half-up to the nearest paisa.
- * Used by the tax and coupon services; the rate itself comes from
- * verified store configuration, never from a hardcoded constant.
- */
 export function percentOf(amount: Paise, ratePercent: number): Paise {
   assertPaise(amount);
   if (!Number.isFinite(ratePercent) || ratePercent < 0) {
@@ -80,7 +63,6 @@ export function percentOf(amount: Paise, ratePercent: number): Paise {
   return Math.round((amount * ratePercent) / 100);
 }
 
-/** Display formatting only — never feed this back into a calculation. */
 export function formatINR(paise: Paise, opts: { withSymbol?: boolean } = {}): string {
   assertPaise(paise);
   const { withSymbol = true } = opts;
@@ -93,11 +75,6 @@ export function formatINR(paise: Paise, opts: { withSymbol?: boolean } = {}): st
   return formatted;
 }
 
-/**
- * Discount percentage for display badges.
- * Returns null when there is no genuine saving, so the UI cannot render a
- * misleading "SAVE 0%" label.
- */
 export function discountPercent(pricePaise: Paise, mrpPaise: Paise): number | null {
   assertPaise(pricePaise, 'price');
   assertPaise(mrpPaise, 'mrp');

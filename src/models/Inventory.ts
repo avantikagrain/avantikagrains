@@ -1,23 +1,6 @@
-// mongoose is a CommonJS package. With "type": "module" in package.json,
-// named ESM imports of its runtime exports fail under plain Node (tsx, seed
-// scripts) even though bundlers paper over it — so take the default export
-// and destructure. Types are erased at compile time and import normally.
 import mongoose, { type Model, type Types } from 'mongoose';
 
 const { Schema, model, models } = mongoose;
-
-/**
- * Two-part inventory model.
- *
- * `InventoryReservation` holds stock while an order awaits payment. It
- * carries a TTL so a crashed checkout never strands stock — MongoDB expires
- * the document and the sweeper (`releaseExpiredReservations`) returns the
- * units to the variant's available pool.
- *
- * `InventoryMovement` is the append-only ledger. Every change to stockQty
- * has a corresponding movement row, so physical counts can be reconciled
- * against the system at any time.
- */
 
 export const RESERVATION_STATUSES = ['held', 'committed', 'released', 'expired'] as const;
 export type ReservationStatus = (typeof RESERVATION_STATUSES)[number];
@@ -50,8 +33,7 @@ const reservationSchema = new Schema<IInventoryReservation>(
     expiresAt: {
       type: Date,
       required: true,
-      // 20 minutes: long enough for a UPI collect request, short enough that
-      // stock is not held hostage by abandoned checkouts.
+
       default: () => new Date(Date.now() + 20 * 60 * 1000),
     },
     committedAt: Date,
@@ -86,7 +68,7 @@ export interface IInventoryMovement {
   product: Types.ObjectId;
   variantId: Types.ObjectId;
   sku: string;
-  /** Signed: negative removes stock, positive adds it. */
+
   delta: number;
   balanceAfter: number;
   reason: MovementReason;
@@ -125,7 +107,6 @@ movementSchema.index({ sku: 1, createdAt: -1 });
 movementSchema.index({ order: 1 });
 movementSchema.index({ reason: 1, createdAt: -1 });
 
-/** The ledger is append-only — correcting an error means a new row. */
 movementSchema.pre('save', function blockUpdates(next) {
   if (!this.isNew) {
     return next(new Error('Inventory movements are append-only and cannot be modified'));

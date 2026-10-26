@@ -1,9 +1,3 @@
-/**
- * Structured logging.
- *
- * Secrets and PII must never reach the log stream — redaction below is a
- * safety net, not a licence to log sensitive fields deliberately.
- */
 import pino from 'pino';
 
 const level = process.env.LOG_LEVEL ?? 'info';

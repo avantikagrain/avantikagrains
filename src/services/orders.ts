@@ -2,7 +2,6 @@ import type { HydratedDocument, Types } from 'mongoose';
 import { connectDB } from '@/lib/db';
 import { Coupon, Order, Payment, type IOrder, type IOrderAddressSnapshot } from '@/models';
 
-/** Mongoose document, not the plain interface — these are saved, not just read. */
 type OrderDoc = HydratedDocument<IOrder>;
 import { AppError, badRequest, notFound } from '@/lib/errors';
 import { generateOrderNumber } from '@/lib/order-number';
@@ -21,37 +20,23 @@ export interface CreateOrderInput {
   customerNote?: string;
   userId?: string;
   guestEmail?: string;
-  /** Client-generated UUID. The same key always yields the same order. */
+
   idempotencyKey: string;
 }
 
 export interface CreateOrderResult {
   order: OrderDoc;
-  /** Present for online payments — what the browser hands to Checkout. */
+
   gateway?: {
     keyId: string;
     gatewayOrderId: string;
     amountPaise: number;
     currency: 'INR';
   };
-  /** True when an identical request had already created this order. */
+
   replayed: boolean;
 }
 
-/**
- * Creates an order.
- *
- * Ordering matters and is deliberate:
- *   1. price it (server-side, from the database)
- *   2. hold the stock
- *   3. write the order
- *   4. open the gateway order
- *
- * If step 3 or 4 fails the stock hold is released. If the request is a
- * retry, the unique index on `idempotencyKey` turns it into a lookup rather
- * than a second order — this is what stops a double-tapped Pay button or a
- * network retry from charging twice.
- */
 export async function createOrder(input: CreateOrderInput): Promise<CreateOrderResult> {
   await connectDB();
 
@@ -62,7 +47,6 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     throw badRequest('An email address is required to place an order');
   }
 
-  // --- Replay check --------------------------------------------------------
   const existing = await Order.findOne({ idempotencyKey: input.idempotencyKey });
   if (existing) {
     logger.info({ orderNumber: existing.orderNumber }, 'Idempotent replay of order creation');
@@ -82,7 +66,6 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     };
   }
 
-  // --- 1. Price ------------------------------------------------------------
   const quote = await quoteOrder({
     items: input.items,
     couponCode: input.couponCode,
@@ -91,7 +74,6 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     userId: input.userId,
   });
 
-  // --- 2. Hold stock -------------------------------------------------------
   await reserveStock(
     quote.lines.map((l) => ({
       productId: l.product,
@@ -105,18 +87,14 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
   let order: OrderDoc;
 
   try {
-    // --- 3. Write the order ------------------------------------------------
     order = await createOrderDocument(input, quote);
   } catch (err) {
     await releaseReservations(input.idempotencyKey, 'order_cancelled');
     throw err;
   }
 
-  // --- 4. Gateway / COD ----------------------------------------------------
   try {
     if (input.paymentMethod === 'cod') {
-      // COD is accepted immediately: no gateway round-trip, so the stock is
-      // committed now and the order is confirmed.
       await commitReservations(order._id, input.idempotencyKey);
       order.paymentStatus = 'cod_pending';
       order.status = 'confirmed';
@@ -160,8 +138,6 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       },
     };
   } catch (err) {
-    // The order exists but cannot be paid — cancel it and free the stock
-    // rather than leaving a zombie that holds inventory.
     logger.error({ err, orderNumber: order.orderNumber }, 'Payment setup failed after order creation');
     await releaseReservations(input.idempotencyKey, 'order_cancelled').catch(() => undefined);
     order.status = 'cancelled';
@@ -175,8 +151,6 @@ async function createOrderDocument(
   input: CreateOrderInput,
   quote: Awaited<ReturnType<typeof quoteOrder>>,
 ): Promise<OrderDoc> {
-  // Order numbers are random, so a collision is possible in principle.
-  // Retry on duplicate key rather than assuming it never happens.
   const MAX_ATTEMPTS = 5;
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
@@ -246,7 +220,6 @@ async function incrementCouponUsage(code?: string): Promise<void> {
 
 export { incrementCouponUsage };
 
-/** Cancellation. Only legal from states the order model permits. */
 export async function cancelOrder(
   orderId: string,
   reason: string,
@@ -261,7 +234,6 @@ export async function cancelOrder(
     throw badRequest(`An order that is already ${order.status} cannot be cancelled`);
   }
 
-  // Stock went out of the pool at different points depending on state.
   if (order.status === 'pending_payment') {
     await releaseReservations(order.idempotencyKey, 'order_cancelled');
   }
@@ -289,8 +261,6 @@ export async function findOrderForCustomer(
   const order = await Order.findOne({ orderNumber: orderNumber.trim().toUpperCase() });
   if (!order) throw notFound('Order not found');
 
-  // Authorisation, not just lookup: an order number alone must not expose
-  // someone else's address and phone number.
   const owns =
     (identity.userId && order.user?.toString() === identity.userId) ||
     (identity.email && order.guestEmail === identity.email.toLowerCase());

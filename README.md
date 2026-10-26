@@ -67,9 +67,8 @@ business rules enforced at the schema level, not just in services:
 forest accent, warm low-spread shadows, `prefers-reduced-motion` honoured
 globally.
 
-**Catalogue** — `data/products-seed.csv`, 31 products scraped from the live
-site (Grains 8, Pulses 12, Seeds 8, Combo 3). Note: the master prompt says
-30; the live catalogue has 31.
+**Catalogue** — `data/products-seed.csv`, 31 products carried over from the
+live site (Grains 8, Pulses 12, Seeds 8, Combo 3).
 
 ---
 

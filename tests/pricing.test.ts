@@ -4,7 +4,6 @@ import { generateOrderNumber, financialYearFor, isValidOrderNumber } from '@/lib
 
 describe('inclusive GST extraction', () => {
   it('splits a 5% inclusive price so the parts sum back exactly', () => {
-    // ₹149 inclusive of 5% GST
     const { taxablePaise, taxPaise } = splitInclusiveTax(14900, 5);
     expect(taxablePaise + taxPaise).toBe(14900);
     expect(taxablePaise).toBe(14190);
@@ -37,7 +36,6 @@ describe('discount allocation', () => {
   });
 
   it('handles an indivisible remainder', () => {
-    // 100 paise across three equal lines cannot divide evenly.
     const allocated = allocateDiscount([10000, 10000, 10000], 100);
     expect(allocated.reduce((s, v) => s + v, 0)).toBe(100);
     expect(allocated).toHaveLength(3);
@@ -76,7 +74,6 @@ describe('order numbers', () => {
   });
 
   it('uses the IST date, not UTC', () => {
-    // 20:30 UTC on 20 April is already 02:00 IST on 21 April.
     const number = generateOrderNumber(new Date('2026-04-20T20:30:00Z'));
     expect(number.startsWith('AG-260421-')).toBe(true);
   });

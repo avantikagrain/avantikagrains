@@ -9,19 +9,6 @@ import {
 import { outOfStock } from '@/lib/errors';
 import { logger } from '@/lib/logger';
 
-/**
- * Stock lifecycle.
- *
- *   reserve  → availableQty--, reservedQty++     (checkout starts)
- *   commit   → reservedQty--,  stockQty--        (payment confirmed)
- *   release  → reservedQty--,  availableQty++    (cancelled / expired)
- *
- * Every step is a single conditional `updateOne`. There is no
- * read-check-write anywhere in this file, because between the read and the
- * write another request can take the last unit — which is exactly how an
- * oversell happens.
- */
-
 export interface ReserveLine {
   productId: Types.ObjectId | string;
   variantId: Types.ObjectId | string;
@@ -29,16 +16,6 @@ export interface ReserveLine {
   quantity: number;
 }
 
-/**
- * Atomically holds stock for every line, or holds nothing.
- *
- * Partial reservations are rolled back explicitly: if line 3 of 5 fails,
- * lines 1 and 2 are released before the error propagates, so a failed
- * checkout never leaves stock stranded.
- *
- * `idempotencyKey` makes a retried request a no-op rather than a second
- * hold — the unique index on the reservation is the guard.
- */
 export async function reserveStock(
   lines: ReserveLine[],
   idempotencyKey: string,
@@ -46,7 +23,6 @@ export async function reserveStock(
 ): Promise<IInventoryReservation[]> {
   await connectDB();
 
-  // A retry of the same checkout returns the existing holds untouched.
   const existing = await InventoryReservation.find({
     idempotencyKey: { $regex: `^${escapeRegex(idempotencyKey)}:` },
     status: 'held',
@@ -82,8 +58,6 @@ export async function reserveStock(
         { session },
       );
 
-      // matchedCount === 0 means the predicate failed: either the variant
-      // vanished or someone else took the stock a moment ago.
       if (result.matchedCount === 0) {
         throw outOfStock(`"${line.sku}" is no longer available in the requested quantity`, {
           sku: line.sku,
@@ -112,7 +86,6 @@ export async function reserveStock(
 
     return reservations;
   } catch (err) {
-    // Roll back whatever was already held so the failure costs nothing.
     for (const line of taken) {
       await Product.updateOne(
         { _id: line.productId, 'variants._id': line.variantId },
@@ -124,7 +97,6 @@ export async function reserveStock(
         },
         { session },
       ).catch((rollbackErr) => {
-        // A failed rollback is a genuine inconsistency — loud, not silent.
         logger.error(
           { rollbackErr, sku: line.sku, idempotencyKey },
           'CRITICAL: reservation rollback failed, stock may be stranded',
@@ -139,10 +111,6 @@ export async function reserveStock(
   }
 }
 
-/**
- * Converts holds into real stock depletion. Called only after payment is
- * confirmed server-side (or a COD order is accepted).
- */
 export async function commitReservations(
   orderId: Types.ObjectId | string,
   idempotencyKey: string,
@@ -194,7 +162,6 @@ export async function commitReservations(
   logger.info({ orderId, count: held.length }, 'Reservations committed');
 }
 
-/** Returns held stock to the available pool (cancellation, payment failure). */
 export async function releaseReservations(
   idempotencyKey: string,
   reason: 'order_cancelled' | 'reservation_expired' = 'order_cancelled',
@@ -227,14 +194,6 @@ export async function releaseReservations(
   return held.length;
 }
 
-/**
- * Sweeper for holds whose checkout never completed.
- *
- * The reservation document carries a TTL index, but TTL deletion would
- * remove the row WITHOUT returning the stock. This job must therefore run
- * more frequently than the TTL window (every 5 minutes against a 20-minute
- * hold) so stock is restored before the record disappears.
- */
 export async function releaseExpiredReservations(): Promise<number> {
   await connectDB();
 
@@ -282,7 +241,6 @@ export async function releaseExpiredReservations(): Promise<number> {
   return restored;
 }
 
-/** Manual adjustment from the admin dashboard. Always leaves a ledger row. */
 export async function adjustStock(params: {
   productId: Types.ObjectId | string;
   variantId: Types.ObjectId | string;
@@ -305,7 +263,7 @@ export async function adjustStock(params: {
       variants: {
         $elemMatch: {
           _id: variantId,
-          // A negative adjustment must not push available stock below zero.
+
           ...(delta < 0 ? { availableQty: { $gte: -delta } } : {}),
         },
       },

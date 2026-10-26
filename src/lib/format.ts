@@ -1,11 +1,3 @@
-/**
- * Client-safe formatting helpers.
- *
- * Separate from src/lib/money.ts on purpose: that module throws on invalid
- * input and is imported by server code that touches env and the database.
- * This one is pure and safe to bundle into a client component.
- */
-
 export function formatPaise(paise: number): string {
   const rupees = paise / 100;
   return new Intl.NumberFormat('en-IN', {

@@ -1,40 +1,23 @@
-// mongoose is a CommonJS package. With "type": "module" in package.json,
-// named ESM imports of its runtime exports fail under plain Node (tsx, seed
-// scripts) even though bundlers paper over it — so take the default export
-// and destructure. Types are erased at compile time and import normally.
 import mongoose, { type Model, type Types } from 'mongoose';
 
 const { Schema, model, models } = mongoose;
 
-/**
- * Single-document store configuration.
- *
- * Every field here must be filled from values the business has verified.
- * Nothing is seeded with a plausible-looking default: a wrong GSTIN or an
- * invented FSSAI number on an invoice is a compliance problem, not a bug.
- */
-
 export interface IStoreSettings {
   _id: Types.ObjectId;
-  /** Enforces the singleton — always 'default'. */
+
   key: 'default';
 
-  /**
-   * True while the store is running on demo stand-ins (placeholder FSSAI,
-   * generated imagery, invented commercials). Production boot refuses to
-   * start while this is set.
-   */
   demoDataInUse: boolean;
 
   business: {
     legalName?: string;
     tradeName?: string;
     registeredAddress?: string;
-    /** 15-character GSTIN. Required before any tax-inclusive invoice. */
+
     gstin?: string;
     pan?: string;
     iec?: string;
-    /** 14-digit FSSAI licence. Mandatory for food sales in India. */
+
     fssaiLicenceNo?: string;
     fssaiValidUntil?: Date;
     supportEmail?: string;
@@ -42,13 +25,12 @@ export interface IStoreSettings {
   };
 
   tax: {
-    /** Prices on the site include GST (standard for Indian B2C retail). */
     pricesIncludeTax: boolean;
-    /** State of supply, used to split CGST+SGST vs IGST. */
+
     originStateCode?: string;
     shippingHsnCode?: string;
     shippingGstRatePercent?: number;
-    /** Discounts reduce the taxable value before GST is computed. */
+
     discountReducesTaxableValue: boolean;
     configurationVerifiedBy?: string;
     configurationVerifiedAt?: Date;
@@ -67,13 +49,13 @@ export interface IStoreSettings {
     feePaise: number;
     minOrderPaise: number;
     maxOrderPaise: number;
-    /** Empty means "wherever the courier serves". */
+
     blockedPincodes: string[];
   };
 
   payments: {
     razorpayLiveMode: boolean;
-    /** Set once the Razorpay webhook has actually been configured. */
+
     razorpayWebhookConfiguredAt?: Date;
   };
 
@@ -202,10 +184,6 @@ const storeSettingsSchema = new Schema<IStoreSettings>(
 
 storeSettingsSchema.index({ key: 1 }, { unique: true });
 
-/**
- * Readiness gate used by the launch checklist and by the publish guard on
- * products. Returns the list of things still missing — empty means ready.
- */
 storeSettingsSchema.methods.missingForLaunch = function (
   this: IStoreSettings,
 ): string[] {

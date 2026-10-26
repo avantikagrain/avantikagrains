@@ -1,18 +1,5 @@
-/**
- * Copies the self-hosted web fonts out of the @fontsource packages into
- * public/fonts.
- *
- * public/fonts is committed, so this does not run on a normal install —
- * it exists so the set is reproducible when a weight is added or a
- * @fontsource version is bumped, instead of someone hand-copying files and
- * leaving the @font-face rules pointing at something that is no longer
- * there.
- *
- * Usage: npm run fonts:sync
- */
 import { copyFileSync, mkdirSync } from 'node:fs';
 
-/** Must stay in step with the @font-face rules in src/app/globals.css. */
 const WANTED = {
   inter: ['inter-latin-300-normal', 'inter-latin-400-normal', 'inter-latin-500-normal'],
   'playfair-display': [

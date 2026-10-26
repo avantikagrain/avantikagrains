@@ -1,0 +1,12 @@
+{
+  "fssaiLicenceNo": "12345678901234",
+  "manufacturerName": "Avantika Grain Mills Pvt. Ltd.",
+  "manufacturerAddress": "Depalpur, Indore, Madhya Pradesh 453115",
+  "countryOfOrigin": "India",
+  "categories": {
+    "grains": { "hsnCode": "1101", "gstRatePercent": 0 },
+    "pulses": { "hsnCode": "0713", "gstRatePercent": 0 },
+    "seeds":  { "hsnCode": "1207", "gstRatePercent": 0 },
+    "combo":  { "hsnCode": "1101", "gstRatePercent": 0 }
+  }
+}

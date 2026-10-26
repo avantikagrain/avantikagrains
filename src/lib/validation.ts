@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-/** Shared request schemas. Every route validates before touching a service. */
+import { MAX_CART_LINES, MAX_ITEM_QUANTITY } from './limits';
 
 export const objectIdSchema = z
   .string()
@@ -29,25 +29,29 @@ export const addressSchema = z.object({
 export const cartItemSchema = z.object({
   productId: objectIdSchema,
   variantId: objectIdSchema,
-  quantity: z.number().int().min(1).max(99),
+  quantity: z
+    .number()
+    .int()
+    .min(1)
+    .max(MAX_ITEM_QUANTITY, `A maximum of ${MAX_ITEM_QUANTITY} units per item is allowed`),
 });
 
 export const quoteRequestSchema = z.object({
-  items: z.array(cartItemSchema).min(1, 'Your cart is empty').max(50),
+  items: z.array(cartItemSchema).min(1, 'Your cart is empty').max(MAX_CART_LINES),
   couponCode: z.string().trim().max(32).optional(),
   pincode: pincodeSchema.optional(),
   paymentMethod: z.enum(['razorpay', 'cod']),
 });
 
 export const createOrderSchema = z.object({
-  items: z.array(cartItemSchema).min(1).max(50),
+  items: z.array(cartItemSchema).min(1).max(MAX_CART_LINES),
   shippingAddress: addressSchema,
   billingAddress: addressSchema.optional(),
   paymentMethod: z.enum(['razorpay', 'cod']),
   couponCode: z.string().trim().max(32).optional(),
   customerNote: z.string().max(500).optional(),
   guestEmail: z.string().email().optional(),
-  // A UUID from the client. The same key always resolves to the same order.
+
   idempotencyKey: z.string().uuid('idempotencyKey must be a UUID'),
 });
 
@@ -58,13 +62,6 @@ export const verifyPaymentSchema = z.object({
   razorpay_signature: z.string().min(1),
 });
 
-/**
- * Explicitly rejects any client-supplied money field.
- *
- * A request that tries to send a price, discount or total is not merely
- * ignored — it is refused, so a tampering attempt shows up as an error
- * rather than silently succeeding at a different amount.
- */
 export const noClientPricing = z
   .object({})
   .passthrough()

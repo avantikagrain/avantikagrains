@@ -25,12 +25,6 @@ const SORTS: Record<string, Record<string, 1 | -1>> = {
   name: { name: 1 },
 };
 
-/**
- * Public catalogue listing.
- *
- * Only `active` products are ever returned — draft and archived rows stay
- * invisible to the storefront regardless of what is asked for.
- */
 export const GET = route(async (request: NextRequest) => {
   await connectDB();
 
@@ -41,8 +35,7 @@ export const GET = route(async (request: NextRequest) => {
 
   if (params.category) {
     const category = await Category.findOne({ slug: params.category, isActive: true });
-    // An unknown category yields an empty page rather than the whole
-    // catalogue, which would silently ignore the filter.
+
     if (!category) {
       return paginated([], buildPaginationMeta(params.page, params.limit, 0));
     }
@@ -86,7 +79,6 @@ export const GET = route(async (request: NextRequest) => {
   );
 });
 
-/** Card projection — only what a grid needs, no internal stock figures. */
 function serialiseCard(product: Record<string, never> | unknown) {
   const p = product as IProduct & { category: { name: string; slug: string } };
   const primary = p.variants.find((v) => v.isActive) ?? p.variants[0];
@@ -106,8 +98,7 @@ function serialiseCard(product: Record<string, never> | unknown) {
         packSize: v.packSize,
         pricePaise: v.pricePaise,
         mrpPaise: v.mrpPaise,
-        // Exact stock counts are a business signal; the storefront only
-        // needs to know whether it can be bought.
+
         inStock: v.availableQty > 0,
         lowStock: v.availableQty > 0 && v.availableQty <= v.lowStockThreshold,
       })),

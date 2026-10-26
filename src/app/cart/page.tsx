@@ -6,10 +6,9 @@ import { useCart } from '@/components/cart/cart-store';
 import { formatPaise } from '@/lib/format';
 
 export default function CartPage() {
-  const { items, setQuantity, remove, displaySubtotalPaise, count, ready } = useCart();
+  const { items, setQuantity, remove, displaySubtotalPaise, count, ready, maxQuantity } =
+    useCart();
 
-  // Nothing renders until stored state has been read, otherwise the page
-  // flashes "empty" on every load.
   if (!ready) {
     return (
       <div className="mx-auto max-w-[86rem] px-5 pb-20 pt-36 sm:px-8 sm:pt-44">
@@ -89,8 +88,9 @@ export default function CartPage() {
                     <button
                       type="button"
                       onClick={() => setQuantity(item.variantId, item.quantity + 1)}
+                      disabled={item.quantity >= maxQuantity}
                       aria-label={`Increase quantity of ${item.name}`}
-                      className="h-9 w-8 text-[var(--fg-muted)] transition-colors hover:text-[var(--accent)]"
+                      className="h-9 w-8 text-[var(--fg-muted)] transition-colors hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-30"
                     >
                       +
                     </button>
@@ -104,6 +104,18 @@ export default function CartPage() {
                     Remove
                   </button>
                 </div>
+
+                {item.quantity >= maxQuantity && (
+                  <p className="mt-2 text-micro text-[var(--fg-faint)]">
+                    Maximum {maxQuantity} per item.{' '}
+                    <Link
+                      href="/bulk-orders"
+                      className="font-medium text-[var(--accent)] underline underline-offset-2"
+                    >
+                      Order in bulk
+                    </Link>
+                  </p>
+                )}
               </div>
 
               <p className="tabular-nums text-body">

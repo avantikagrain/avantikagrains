@@ -15,7 +15,7 @@ describe('paise conversion', () => {
   it('converts rupees to paise without float drift', () => {
     expect(rupeesToPaise(149)).toBe(14900);
     expect(rupeesToPaise(0.1)).toBe(10);
-    // 1.005 * 100 is 100.49999... in binary float; must still round to 101.
+
     expect(rupeesToPaise(1.005)).toBe(101);
   });
 
@@ -46,7 +46,6 @@ describe('paise guards', () => {
 
 describe('order arithmetic', () => {
   it('computes a realistic cart total', () => {
-    // 2 x Emmer Wheat (₹149) + 1 x Quinoa (₹349)
     const emmer = multiplyPaise(14900, 2);
     const quinoa = multiplyPaise(34900, 1);
     const subtotal = addPaise(emmer, quinoa);
@@ -55,18 +54,17 @@ describe('order arithmetic', () => {
   });
 
   it('rounds percentage calculations half-up to the paisa', () => {
-    // 5% of ₹110 = ₹5.50
     expect(percentOf(11000, 5)).toBe(550);
-    // 5% of ₹99.01 = 495.05 paise -> 495
+
     expect(percentOf(9901, 5)).toBe(495);
   });
 });
 
 describe('discount badges', () => {
   it('matches the live catalogue savings', () => {
-    expect(discountPercent(14900, 17900)).toBe(17); // Emmer Wheat
-    expect(discountPercent(49900, 59900)).toBe(17); // Hemp Seeds
-    expect(discountPercent(79900, 94900)).toBe(16); // Super Seeds Combo
+    expect(discountPercent(14900, 17900)).toBe(17);
+    expect(discountPercent(49900, 59900)).toBe(17);
+    expect(discountPercent(79900, 94900)).toBe(16);
   });
 
   it('returns null when there is no genuine saving', () => {

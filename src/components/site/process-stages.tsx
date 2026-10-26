@@ -3,14 +3,6 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-/**
- * The five-stage milling process as a stepped panel.
- *
- * Built as a controlled index rather than a scroll carousel so the stage
- * can be reached by keyboard and by the dot controls, and so the panel
- * height does not jump between stages with different amounts of text.
- */
-
 const STAGES = [
   {
     stage: 'Farm-to-Gate Traceability',
@@ -69,7 +61,7 @@ export function ProcessStages() {
         </div>
 
         <div className="relative mt-14">
-          {/* Oversized stage numeral, decorative only. */}
+
           <span
             aria-hidden
             className="pointer-events-none absolute -right-2 bottom-0 select-none font-[family-name:var(--font-display)] text-[8rem] leading-none text-[var(--gold)] opacity-[0.12] sm:text-[14rem]"
@@ -99,8 +91,6 @@ export function ProcessStages() {
               Step {String(index + 1).padStart(2, '0')} of {String(STAGES.length).padStart(2, '0')}
             </p>
 
-            {/* aria-live so the stage change is announced to screen readers,
-                which otherwise get no signal that content swapped. */}
             <div aria-live="polite">
               <h3 className="display mt-4 text-h1 tracking-[0.02em]">{stage.title}</h3>
               <p className="measure-wide mt-5 text-lead leading-relaxed text-[var(--fg-muted)]">

@@ -1,10 +1,5 @@
 import Link from 'next/link';
 
-/**
- * Shared opening for every editorial and policy page: a standfirst in the
- * display serif over a measured intro, with the crumb trail as plain text.
- * Consistent entry point so these pages read as one publication.
- */
 export function PageHeader({
   crumb,
   title,
@@ -44,7 +39,6 @@ export function PageHeader({
   );
 }
 
-/** Body wrapper for long-form prose — holds the measure and rhythm. */
 export function Prose({ children }: { children: React.ReactNode }) {
   return (
     <div className="mx-auto max-w-[86rem] px-5 py-16 sm:px-8 sm:py-20">

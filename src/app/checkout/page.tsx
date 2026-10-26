@@ -6,28 +6,9 @@ import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { useCart } from '@/components/cart/cart-store';
 import { formatPaise } from '@/lib/format';
-import { LAST_ORDER_KEY } from '@/lib/last-order';
+import { LAST_ORDER_KEY, type PlacedOrder } from '@/lib/last-order';
 import { apiFetch } from '@/lib/api-client';
-
-/**
- * Checkout, step one: the server-priced quote.
- *
- * The figures shown here come from POST /api/v1/checkout/quote, which
- * recomputes everything from the database. The cart's own prices are
- * display-only, so this screen is the first place the customer sees the
- * amount that will actually be charged — and it is also the screen that
- * surfaces a price change or a stock shortfall before payment rather than
- * after.
- *
- * Placing the order posts to /api/v1/orders, which prices the cart again
- * server-side and refuses any amount sent from here. Cash on delivery is
- * accepted immediately and the customer lands on the confirmation screen.
- * An online payment comes back with a gateway order to hand to Checkout.
- *
- * The idempotency key is generated once per attempt and reused on retry, so
- * a double-click, a flaky connection or an impatient refresh resolves to the
- * same single order rather than two.
- */
+import { useSession } from '@/components/account/use-session';
 
 interface QuoteLine {
   sku: string;
@@ -75,10 +56,17 @@ const EMPTY_ADDRESS: Address = {
   pincode: '',
 };
 
-/** Razorpay injects this when its Checkout script loads. */
 declare global {
   interface Window {
     Razorpay?: new (options: Record<string, unknown>) => { open: () => void };
+  }
+}
+
+function rememberPlacedOrder(order: PlacedOrder): void {
+  try {
+    window.sessionStorage.setItem(LAST_ORDER_KEY, JSON.stringify(order));
+  } catch {
+    return;
   }
 }
 
@@ -103,26 +91,54 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const session = useSession();
   const [address, setAddress] = useState<Address>(EMPTY_ADDRESS);
   const [email, setEmail] = useState('');
+  const [prefilled, setPrefilled] = useState(false);
   const [placing, setPlacing] = useState(false);
   const [placeError, setPlaceError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  // The PIN code drives both the quote and the delivery address; keeping two
-  // copies of it is how they end up disagreeing.
   const pincode = address.pincode;
 
-  /**
-   * One key per attempt. Generated lazily so it is not created during
-   * render, and replaced only after an order is actually accepted — a retry
-   * after a failure must reuse it, or a request that in fact succeeded
-   * server-side would create a second order.
-   */
+  const detailsComplete =
+    address.fullName.trim().length >= 2 &&
+    /^[6-9][0-9]{9}$/.test(address.phone.trim()) &&
+    address.line1.trim().length >= 5 &&
+    address.city.trim().length >= 2 &&
+    address.state.trim().length >= 2 &&
+    /^[1-9][0-9]{5}$/.test(address.pincode.trim()) &&
+    /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim());
+
   const idempotencyKey = useRef<string | null>(null);
 
   function setField<K extends keyof Address>(key: K, value: Address[K]) {
     setAddress((current) => ({ ...current, [key]: value }));
+  }
+
+  if (!prefilled && session.status === 'authenticated') {
+    const profile = session.profile;
+    const saved = profile.addresses?.find((a) => a.isDefault) ?? profile.addresses?.[0];
+
+    setPrefilled(true);
+    setEmail((current) => current || profile.email);
+
+    if (saved) {
+      setAddress((current) =>
+        current.line1.trim().length > 0
+          ? current
+          : {
+              fullName: saved.fullName ?? '',
+              phone: saved.phone ?? profile.phone ?? '',
+              line1: saved.line1 ?? '',
+              line2: saved.line2 ?? '',
+              landmark: saved.landmark ?? '',
+              city: saved.city ?? '',
+              state: saved.state ?? '',
+              pincode: saved.pincode ?? '',
+            },
+      );
+    }
   }
 
   useEffect(() => {
@@ -155,10 +171,6 @@ export default function CheckoutPage() {
         }
         setQuote(payload.data);
       } catch (err: unknown) {
-        // An abort means a newer quote is already in flight. Returning
-        // early leaves the spinner up for that one — the previous code
-        // cleared it in a `finally`, which flickered the total back to
-        // "ready" while the real answer was still on its way.
         if (controller.signal.aborted) return;
         setQuote(null);
         setError(err instanceof Error ? err.message : 'Could not price this order');
@@ -179,9 +191,6 @@ export default function CheckoutPage() {
     setPlaceError(null);
     setFieldErrors({});
 
-    // Minted on first submit, inside the handler — a ref must not be read
-    // or written during render, and this is also the first moment the key
-    // is actually needed.
     idempotencyKey.current ??= crypto.randomUUID();
 
     try {
@@ -197,8 +206,7 @@ export default function CheckoutPage() {
             fullName: address.fullName.trim(),
             phone: address.phone.trim(),
             line1: address.line1.trim(),
-            // Optional fields must be absent rather than empty: the schema
-            // caps their length but an empty string is not a valid value.
+
             ...(address.line2.trim() ? { line2: address.line2.trim() } : {}),
             ...(address.landmark.trim() ? { landmark: address.landmark.trim() } : {}),
             city: address.city.trim(),
@@ -220,8 +228,7 @@ export default function CheckoutPage() {
           setFieldErrors(
             Object.fromEntries(
               details.map((d: { field: string; message: string }) => [
-                // The server reports nested paths such as
-                // "shippingAddress.pincode"; the form knows the leaf.
+
                 d.field.split('.').at(-1) ?? d.field,
                 d.message,
               ]),
@@ -237,31 +244,39 @@ export default function CheckoutPage() {
 
       const order = payload.data ?? payload;
 
-      // Remember what was ordered for the confirmation screen. Written
-      // before any gateway handoff so it survives the round trip.
-      try {
-        window.sessionStorage.setItem(
-          LAST_ORDER_KEY,
-          JSON.stringify({
-            orderNumber: order.orderNumber,
-            paymentMethod: order.paymentMethod,
-            paymentStatus: order.paymentStatus,
-            totalPaise: order.totalPaise,
-            email: email.trim() || undefined,
-            items: items.map((i) => ({
-              name: i.name,
-              packSize: i.packSize,
-              quantity: i.quantity,
-            })),
-          }),
-        );
-      } catch {
-        // Storage blocked — the confirmation page degrades to the generic
-        // view, which is a worse screen but not a failed order.
-      }
+      rememberPlacedOrder({
+        orderNumber: order.orderNumber,
+        paymentMethod: order.paymentMethod,
+        paymentStatus: order.paymentStatus,
+        status: order.status,
+        totalPaise: order.totalPaise,
+        subtotalPaise: quote?.subtotalPaise,
+        discountPaise: quote?.discountPaise,
+        shippingPaise: quote?.shippingPaise,
+        codFeePaise: quote?.codFeePaise,
+        taxPaise: quote?.taxPaise,
+        placedAt: new Date().toISOString(),
+        email: email.trim() || undefined,
+        items: (quote?.lines ?? []).map((line) => ({
+          name: line.name,
+          packSize: line.packSize,
+          quantity: line.quantity,
+          unitPricePaise: line.unitPricePaise,
+          lineSubtotalPaise: line.lineSubtotalPaise,
+        })),
+        shippingAddress: {
+          fullName: address.fullName.trim(),
+          phone: address.phone.trim(),
+          line1: address.line1.trim(),
+          line2: address.line2.trim() || undefined,
+          landmark: address.landmark.trim() || undefined,
+          city: address.city.trim(),
+          state: address.state.trim(),
+          pincode: address.pincode,
+        },
+      });
 
       if (order.paymentMethod === 'cod' || !order.gateway) {
-        // Cash on delivery is already confirmed server-side.
         clear();
         router.push('/order-confirmation');
         return;
@@ -290,8 +305,6 @@ export default function CheckoutPage() {
         },
         theme: { color: '#1e4430' },
         handler: async (result: Record<string, string>) => {
-          // The browser's word that payment succeeded is not evidence. The
-          // server re-checks the signature before anything is marked paid.
           const verify = await apiFetch('/api/v1/payments/verify', {
             method: 'POST',
             body: JSON.stringify({
@@ -403,6 +416,24 @@ export default function CheckoutPage() {
               ))}
             </div>
           </section>
+
+          {session.status === 'anonymous' && (
+            <div className="mt-12 rounded-[var(--radius-panel)] border border-[var(--hairline)] bg-[var(--bg-panel)] p-5">
+              <p className="text-body">
+                <Link
+                  href="/account/login?next=/checkout"
+                  className="font-medium text-[var(--accent)] underline underline-offset-4"
+                >
+                  Sign in
+                </Link>{' '}
+                to use your saved address and track this order from your account.
+              </p>
+              <p className="mt-1.5 text-spec text-[var(--fg-faint)]">
+                You can also continue as a guest — the details below are required either
+                way.
+              </p>
+            </div>
+          )}
 
           <section className="mt-12">
             <h2 className="display text-h3">Delivery address</h2>
@@ -580,14 +611,9 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          {/*
-            Disabled until there is a server-priced quote. Without one there
-            is no total on screen, and a button that charges an amount the
-            customer has not been shown is not a checkout.
-          */}
           <button
             type="submit"
-            disabled={placing || loading || !quote}
+            disabled={placing || loading || !quote || !detailsComplete}
             className="btn btn-primary mt-7 w-full disabled:cursor-not-allowed disabled:opacity-60"
           >
             {placing && <Loader2 size={16} className="animate-spin" />}
@@ -597,6 +623,12 @@ export default function CheckoutPage() {
                 ? 'Place order'
                 : `Pay now${quote ? ` · ${formatPaise(quote.totalPaise)}` : ''}`}
           </button>
+
+          {!detailsComplete && (
+            <p className="mt-3 text-spec text-[var(--fg-faint)]">
+              Fill in your name, mobile, email and full delivery address to continue.
+            </p>
+          )}
 
           <p className="mt-3 text-spec leading-relaxed text-[var(--fg-faint)]">
             {method === 'cod'

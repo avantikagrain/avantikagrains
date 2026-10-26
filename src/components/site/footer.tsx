@@ -83,9 +83,7 @@ export function Footer() {
           <p className="text-spec text-[var(--fg-faint)]">
             © {new Date().getFullYear()} Avantika Grain Mills Private Limited
           </p>
-          {/* FSSAI licence number is statutory on a food retailer's site and
-              is rendered here from store settings once the business supplies
-              it. It is deliberately absent rather than a placeholder. */}
+
           <p className="text-spec text-[var(--fg-faint)]">
             Prices inclusive of GST
           </p>

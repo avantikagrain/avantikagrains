@@ -24,7 +24,7 @@ export function ProductCard({
   const discount = savingsPercent(product.pricePaise, product.mrpPaise);
 
   const line = {
-    productId: product.slug,
+    productId: product.productId,
     variantId: product.variantId,
     slug: product.slug,
     name: product.name,
@@ -40,8 +40,6 @@ export function ProductCard({
   }
 
   function handleBuyNow() {
-    // Held until the route actually changes, so the button cannot be
-    // double-tapped into two navigations on a slow connection.
     setBuying(true);
     buyNow(line);
     router.push('/checkout');
@@ -103,8 +101,6 @@ export function ProductCard({
           )}
         </div>
 
-        {/* Two actions, ranked. "Buy now" is the conversion path and gets
-            the filled button; "Add" keeps the shopper browsing. */}
         <div className="mt-4 flex gap-2">
           <button
             type="button"

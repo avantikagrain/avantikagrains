@@ -10,14 +10,6 @@ export const metadata: Metadata = {
     'How Avantika grades grain: optical sorting thresholds, moisture control, batch benchmarking, and what documentation is available to buyers.',
 };
 
-/**
- * Editorial photography, served from the client's Cloudinary account.
- *
- * `f_auto,q_auto` lets Cloudinary pick the format and compression; Next's
- * own optimiser then resizes per breakpoint. The host is allow-listed in
- * next.config.ts — a remote image from anywhere else is refused outright,
- * which is why a new URL needs a config change and not just a paste.
- */
 const CLOUDINARY = 'https://res.cloudinary.com/sbfiliaz/image/upload/f_auto,q_auto';
 
 const PHOTO = {
@@ -26,10 +18,6 @@ const PHOTO = {
   assortment: `${CLOUDINARY}/Rustic_Assortment_of_Grains_and_Pulses`,
 };
 
-/**
- * Read in line, per batch, and recorded against the batch number printed on
- * the pack.
- */
 const MEASURED = [
   ['Optical purity', '99.98% threshold — trichromatic sorting'],
   ['Moisture', 'Near-infrared, continuous'],
@@ -49,22 +37,14 @@ const DOCUMENTATION = [
 export default function QualityPage() {
   return (
     <>
-      {/*
-        Hero.
 
-        The heading rises 20px while the photograph settles out of a 1.03
-        scale over 900ms, so the two finish together and the picture reads
-        as coming to rest beneath the words. Both are plain CSS animations
-        running on load — no observer, because the hero is never below the
-        fold and has nothing to wait for.
-      */}
       <header className="relative isolate overflow-hidden">
         <Image
           src={PHOTO.lab}
           alt=""
           fill
           sizes="100vw"
-          // The hero is this page's LCP element.
+
           priority
           quality={82}
           className="hero-settle -z-10 object-cover"
@@ -95,7 +75,7 @@ export default function QualityPage() {
       </header>
 
       <div className="mx-auto max-w-[86rem] px-5 sm:px-8">
-        {/* ---- What gets measured ------------------------------------- */}
+
         <section className="border-b border-[var(--hairline)] py-14 lg:py-20">
           <Reveal>
             <p className="label">The measurements</p>
@@ -107,12 +87,6 @@ export default function QualityPage() {
             </p>
           </Reveal>
 
-          {/*
-            Cards rather than a definition list: seven rows of small type
-            read as fine print, which is the opposite of what a page about
-            rigour should look like. They come in one at a time, 80ms apart,
-            so the group arrives as a single movement.
-          */}
           <ul className="mt-10 grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
             {MEASURED.map(([label, value], i) => (
               <Reveal
@@ -130,7 +104,6 @@ export default function QualityPage() {
           </ul>
         </section>
 
-        {/* ---- Specification, not certification ------------------------ */}
         <section className="grid gap-10 border-b border-[var(--hairline)] py-14 lg:grid-cols-[1fr_26rem] lg:gap-16 lg:py-20">
           <Reveal>
             <h2 className="display measure-wide text-h2">
@@ -181,7 +154,6 @@ export default function QualityPage() {
         </section>
       </div>
 
-      {/* ---- CTA ------------------------------------------------------- */}
       <section className="mx-auto max-w-[86rem] px-5 py-16 sm:px-8 sm:py-24">
         <Reveal className="panel overflow-hidden rounded-[var(--radius-panel-lg)]">
           <div className="grid lg:grid-cols-[1fr_22rem]">
@@ -196,12 +168,6 @@ export default function QualityPage() {
                 place anything.
               </p>
 
-              {/*
-                The arrow moves 4px on hover and the ground lifts from the
-                deep forest to the lighter one. Movement on the element the
-                pointer is already over is the cheapest way to say "this is
-                a button" without drawing a second border around it.
-              */}
               <Link
                 href="/contact"
                 className="group mt-9 inline-flex h-12 items-center gap-2.5 rounded-[var(--radius-pill)] bg-[var(--accent)] px-7 text-spec font-medium text-[var(--color-cream-50)] transition-colors duration-[var(--t-base)] ease-[var(--ease-lux)] hover:bg-[var(--accent-bright)]"

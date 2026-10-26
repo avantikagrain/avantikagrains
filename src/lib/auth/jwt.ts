@@ -1,10 +1,3 @@
-/**
- * JWT issue/verify using `jose` — Web Crypto based, so the same code runs in
- * Node route handlers and in Edge middleware.
- *
- * Access tokens are short-lived and carry the role claim. Refresh tokens
- * carry a rotating family id so a stolen token can be revoked server-side.
- */
 import { SignJWT, jwtVerify, type JWTPayload } from 'jose';
 import { getEnv } from '../env';
 import type { UserRole } from './rbac';
@@ -21,7 +14,7 @@ export interface AccessClaims extends JWTPayload {
 
 export interface RefreshClaims extends JWTPayload {
   sub: string;
-  /** Refresh-token family — rotated on every use, revoked on reuse. */
+
   fam: string;
   typ: 'refresh';
 }

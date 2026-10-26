@@ -13,22 +13,12 @@ import type { OrderStatus } from '@/models';
 export const metadata: Metadata = {
   title: 'Your orders',
   description: 'Your order history with Avantika Grain Mills.',
-  // An account page must never be indexed or cached by a shared proxy.
+
   robots: { index: false, follow: false },
 };
 
-/**
- * This page reads the session cookie, so it can never be statically
- * rendered or revalidated — each visitor must get their own render.
- */
 export const dynamic = 'force-dynamic';
 
-/**
- * How each order status reads to a customer, and the colour it carries.
- *
- * The model's status values are internal vocabulary ('pending_payment');
- * they are not shown to customers as-is.
- */
 const STATUS: Record<OrderStatus, { label: string; tone: 'wait' | 'live' | 'good' | 'bad' }> = {
   pending_payment: { label: 'Awaiting payment', tone: 'wait' },
   confirmed: { label: 'Confirmed', tone: 'live' },
@@ -51,9 +41,6 @@ const TONE_CLASS: Record<'wait' | 'live' | 'good' | 'bad', string> = {
 export default async function OrdersPage() {
   const session = await getSession();
 
-  // Signing in returns the customer here, so the sign-in link carries this
-  // page as `next` — otherwise they would land on the homepage and have to
-  // find their way back.
   if (!session) redirect('/account/login?next=%2Faccount%2Forders');
 
   const orders = await listOrdersForUser(session.id);
@@ -118,7 +105,12 @@ function OrderRow({ order }: { order: OrderListItem }) {
     <li className="panel rounded-[var(--radius-panel)] p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
         <div>
-          <p className="spec font-medium tracking-[0.08em]">{order.orderNumber}</p>
+          <Link
+            href={`/account/orders/${order.orderNumber}`}
+            className="spec font-medium tracking-[0.08em] text-[var(--accent)] underline-offset-4 hover:underline"
+          >
+            {order.orderNumber}
+          </Link>
           <p className="mt-1 text-micro text-[var(--fg-faint)]">
             Placed {placed} · {order.itemCount} item{order.itemCount === 1 ? '' : 's'} ·{' '}
             {order.paymentMethod === 'cod' ? 'Cash on delivery' : 'Paid online'}
@@ -166,6 +158,14 @@ function OrderRow({ order }: { order: OrderListItem }) {
           )}
         </ul>
       )}
+
+      <Link
+        href={`/account/orders/${order.orderNumber}`}
+        className="mt-4 inline-flex items-center gap-1.5 text-spec text-[var(--accent)] underline underline-offset-4"
+      >
+        Full details
+        <ArrowRight size={14} />
+      </Link>
     </li>
   );
 }

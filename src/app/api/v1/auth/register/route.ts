@@ -9,8 +9,7 @@ export const dynamic = 'force-dynamic';
 
 const schema = z.object({
   email: z.string().email('Enter a valid email address'),
-  // 12 characters with no composition rules: length beats forced symbols,
-  // which mostly produce "Password1!" and a sticky note.
+
   password: z.string().min(12, 'Password must be at least 12 characters').max(72),
   firstName: z.string().trim().min(1).max(80),
   lastName: z.string().trim().max(80).optional(),
@@ -24,7 +23,5 @@ export const POST = route(async (request: NextRequest) => {
   const result = await register(input);
   await setSessionCookies(result.accessToken, result.refreshToken);
 
-  // Tokens go in HTTP-only cookies, never in the response body — a body
-  // token is readable by any injected script.
   return created({ user: result.user });
 });

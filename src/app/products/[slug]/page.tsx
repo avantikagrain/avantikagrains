@@ -72,37 +72,13 @@ export default async function ProductPage({
                 alt={product.images[0].alt}
                 fill
                 sizes="(max-width: 1024px) 100vw, 46vw"
-                // The LCP element on this page — never lazy-loaded.
+
                 priority
                 className="object-cover"
               />
             )}
           </div>
 
-          {/* Stock-photo licensing requires the photographer and source to be
-              credited wherever the image appears. */}
-          {product.images[0]?.credit && (
-            <figcaption className="mt-2 text-spec text-[var(--fg-faint)]">
-              Photo by{' '}
-              <a
-                href={product.images[0].credit.photographerUrl}
-                rel="noopener noreferrer nofollow"
-                target="_blank"
-                className="underline decoration-1 underline-offset-2 hover:text-[var(--accent)]"
-              >
-                {product.images[0].credit.photographer}
-              </a>{' '}
-              on{' '}
-              <a
-                href={product.images[0].credit.sourceUrl}
-                rel="noopener noreferrer nofollow"
-                target="_blank"
-                className="underline decoration-1 underline-offset-2 hover:text-[var(--accent)]"
-              >
-                {product.images[0].credit.source}
-              </a>
-            </figcaption>
-          )}
         </figure>
 
         <div>
@@ -145,9 +121,6 @@ export default async function ProductPage({
         </div>
       </div>
 
-      {/* Statutory product information. Food labelling rules require these to
-          be available before purchase, so they are on the page rather than
-          behind a tab. */}
       <section className="border-t border-[var(--hairline)] bg-[var(--bg-raised)]">
         <div className="mx-auto grid max-w-[86rem] gap-10 px-5 py-14 sm:px-8 lg:grid-cols-[22rem_1fr] lg:gap-16 lg:py-16">
           <h2 className="display text-h2">Product information</h2>

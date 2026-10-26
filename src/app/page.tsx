@@ -16,9 +16,7 @@ const TRUST = [
 
 export default async function HomePage() {
   const [products, categories] = await Promise.all([
-    // Twelve rather than eight: a retail homepage's job is to put stock in
-    // front of people, and three full rows reads as a shop rather than a
-    // teaser.
+
     getFeaturedProducts(12),
     listCategories(),
   ]);
@@ -27,18 +25,6 @@ export default async function HomePage() {
     <>
       <HeroBanners />
 
-      {/*
-        Products sit directly under the hero.
-
-        Anything placed between the two — a brand statement, a trust strip —
-        pushes the first product below the fold, which is the one thing a
-        storefront homepage cannot afford. The brand copy and the process
-        story still appear, further down, where someone who is reading
-        rather than shopping will reach them.
-
-        The page's h1 lives here so it is both the SEO heading and the
-        shopping headline, instead of occupying a section of its own.
-      */}
       <section className="mx-auto max-w-[86rem] px-4 pt-12 pb-20 sm:px-6 sm:pt-14">
         <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-5">
           <div>
@@ -85,8 +71,7 @@ export default async function HomePage() {
         ) : (
           <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
             {products.map((product, i) => (
-              // The first row is above the fold on most screens and must
-              // not be lazy-loaded.
+
               <ProductCard key={product.slug} product={product} priority={i < 4} />
             ))}
           </div>
@@ -100,7 +85,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Trust — below the shelf, where it reassures rather than delays. */}
       <section className="border-y border-[var(--hairline)] bg-[var(--bg-sunken)]">
         <div className="mx-auto max-w-[86rem] px-4 py-14 sm:px-6">
           <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
@@ -120,7 +104,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* The milling story, for anyone still reading. */}
       <ProcessStages />
 
       <section className="mx-auto max-w-[86rem] px-4 py-20 sm:px-6">

@@ -1,15 +1,15 @@
 import type { NextRequest } from 'next/server';
 import { created, ok, route } from '@/lib/api-response';
 import { getSession } from '@/lib/auth/session';
-import { badRequest } from '@/lib/errors';
+import { badRequest, unauthenticated } from '@/lib/errors';
 import { createOrderSchema, noClientPricing } from '@/lib/validation';
 import { createOrder } from '@/services/orders';
 import { connectDB } from '@/lib/db';
-import { Order } from '@/models';
+import { Order, User } from '@/models';
+import { requireAccountForOrders } from '@/lib/order-policy';
 
 export const dynamic = 'force-dynamic';
 
-/** Places an order. Safe to retry with the same idempotencyKey. */
 export const POST = route(async (request: NextRequest) => {
   const body = await request.json();
 
@@ -18,8 +18,26 @@ export const POST = route(async (request: NextRequest) => {
 
   const session = await getSession();
 
-  if (!session && !input.guestEmail) {
-    throw badRequest('Sign in or provide an email address to place an order');
+  if (!session) {
+    if (requireAccountForOrders()) {
+      throw unauthenticated('Please sign in to place an order');
+    }
+
+    if (!input.guestEmail) {
+      throw badRequest('Sign in or provide an email address to place an order');
+    }
+
+    await connectDB();
+
+    const registered = await User.exists({
+      email: input.guestEmail.trim().toLowerCase(),
+    });
+
+    if (registered) {
+      throw badRequest(
+        'An account already exists for this email address. Please sign in to place this order.',
+      );
+    }
   }
 
   const result = await createOrder({
@@ -43,11 +61,9 @@ export const POST = route(async (request: NextRequest) => {
     gateway: result.gateway,
   };
 
-  // A replay is not a new resource, so it is 200 rather than 201.
   return result.replayed ? ok(payload) : created(payload);
 });
 
-/** The signed-in customer's order history. */
 export const GET = route(async (request: NextRequest) => {
   const session = await getSession();
   if (!session) throw badRequest('Sign in to view your orders');

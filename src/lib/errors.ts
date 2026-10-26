@@ -1,10 +1,3 @@
-/**
- * Application error taxonomy.
- *
- * Only `AppError` instances are considered safe to describe to a client.
- * Anything else is reported as a generic 500 with no internal detail.
- */
-
 export type ErrorCode =
   | 'BAD_REQUEST'
   | 'VALIDATION_FAILED'
@@ -45,7 +38,7 @@ const STATUS_BY_CODE: Record<ErrorCode, number> = {
 export class AppError extends Error {
   readonly code: ErrorCode;
   readonly status: number;
-  /** Safe to serialise to the client. Never put internals here. */
+
   readonly details?: unknown;
 
   constructor(code: ErrorCode, message: string, details?: unknown) {

@@ -20,16 +20,6 @@ export function Header() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  /**
-   * Close the mobile menu whenever the route changes.
-   *
-   * Adjusted during render rather than in an effect: an effect would paint
-   * the new page once with the menu still covering it, and this also
-   * catches a browser Back, which an onClick on the links would miss.
-   * This is React's documented pattern for resetting state when a value
-   * changes — the extra render it schedules happens before the browser
-   * paints, so the menu is never seen open on the new page.
-   */
   const [lastPath, setLastPath] = useState(pathname);
   if (pathname !== lastPath) {
     setLastPath(pathname);
@@ -105,10 +95,7 @@ export function Header() {
           </Link>
 
           <Link
-            // Orders, not the sign-in form: the page redirects an anonymous
-            // visitor to sign in and carries them back here afterwards, so a
-            // signed-in customer skips a step instead of landing on a form
-            // they do not need.
+
             href="/account/orders"
             aria-label="Your account"
             className="grid h-11 w-11 place-items-center rounded-full text-[var(--fg-muted)] transition-colors duration-[var(--t-fast)] hover:bg-[var(--color-forest-100)] hover:text-[var(--accent)]"
@@ -124,8 +111,7 @@ export function Header() {
             className="relative grid h-11 w-11 place-items-center rounded-full text-[var(--fg-muted)] transition-colors duration-[var(--t-fast)] hover:bg-[var(--color-forest-100)] hover:text-[var(--accent)]"
           >
             <ShoppingBag size={19} strokeWidth={1.6} />
-            {/* Only after mount: the server renders no cart, so an earlier
-                render would mismatch during hydration. */}
+
             {ready && count > 0 && (
               <span className="absolute right-1 top-1 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-[var(--gold)] px-1 text-[10px] font-semibold text-[var(--color-forest-900)]">
                 {count > 99 ? '99+' : count}
@@ -181,7 +167,6 @@ export function Header() {
   );
 }
 
-/** Wheat-ear mark. Replace with public/brand/logo-mark.svg when supplied. */
 function WheatMark() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>

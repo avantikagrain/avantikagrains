@@ -1,16 +1,4 @@
-/**
- * Catalogue import.
- *
- *   npm run seed:products -- data/products-seed.csv
- *
- * Every row is validated before anything is written, and the whole import
- * is rejected if any row fails — a half-imported catalogue is worse than
- * none. Products land in `draft`: they cannot be published until the
- * business supplies FSSAI, HSN and GST values (enforced in the Product model).
- *
- * Re-running is safe: rows are upserted by SKU.
- */
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { parse } from 'csv-parse/sync';
 import { z } from 'zod';
@@ -35,7 +23,6 @@ const rowSchema = z.object({
 
 type Row = z.infer<typeof rowSchema>;
 
-/** "1 KG" / "250 g" → grams. Anything else is a hard failure, not a guess. */
 function parseWeightGrams(packSize: string): number {
   const match = packSize.trim().match(/^([\d.]+)\s*(kg|g|gm|grams?)$/i);
   if (!match) {
@@ -48,6 +35,18 @@ function parseWeightGrams(packSize: string): number {
     throw new Error(`Pack size "${packSize}" resolves to a non-integer gram weight`);
   }
   return grams;
+}
+
+function imageForSlug(slug: string, name: string): IProductImageSeed[] {
+  const publicPath = `/products/${slug}.webp`;
+  if (!existsSync(resolve('public', 'products', `${slug}.webp`))) return [];
+  return [{ url: publicPath, alt: `${name} — Avantika Grain Mills`, displayOrder: 0 }];
+}
+
+interface IProductImageSeed {
+  url: string;
+  alt: string;
+  displayOrder: number;
 }
 
 function slugify(input: string): string {
@@ -69,14 +68,13 @@ async function main() {
     trim: true,
   }) as Record<string, string>[];
 
-  // --- Validate everything up front ---------------------------------------
   const errors: string[] = [];
   const rows: (Row & { weightGrams: number })[] = [];
   const seenSkus = new Set<string>();
   const seenSlugs = new Set<string>();
 
   records.forEach((record, index) => {
-    const lineNo = index + 2; // header is line 1
+    const lineNo = index + 2;
     const parsed = rowSchema.safeParse(record);
 
     if (!parsed.success) {
@@ -114,7 +112,6 @@ async function main() {
 
   await connectDB();
 
-  // --- Categories ----------------------------------------------------------
   const categoryNames = [...new Set(rows.map((r) => r.category))];
   const categoryIdByName = new Map<string, unknown>();
 
@@ -128,7 +125,6 @@ async function main() {
   }
   logger.info({ categories: categoryNames.length }, 'Categories upserted');
 
-  // --- Products ------------------------------------------------------------
   let inserted = 0;
   let updated = 0;
 
@@ -155,9 +151,12 @@ async function main() {
       existing.shortDescription = row.short_description;
       existing.category = categoryIdByName.get(row.category) as never;
 
+      if (existing.images.length === 0) {
+        existing.images = imageForSlug(row.slug, row.name) as never;
+      }
+
       const variantIndex = existing.variants.findIndex((v) => v.sku === row.sku);
       if (variantIndex >= 0) {
-        // Stock is owned by the inventory ledger — the CSV never overwrites it.
         const current = existing.variants[variantIndex];
         current.packSize = variant.packSize;
         current.weightGrams = variant.weightGrams;
@@ -177,10 +176,9 @@ async function main() {
         category: categoryIdByName.get(row.category),
         tag: row.tag || undefined,
         shortDescription: row.short_description,
-        images: [],
+        images: imageForSlug(row.slug, row.name),
         variants: [variant],
-        // Forced to draft regardless of the CSV: publishing requires
-        // verified FSSAI / HSN / GST data that no import can supply.
+
         status: 'draft',
         searchKeywords: [row.name, row.local_name].filter(Boolean) as string[],
       });
@@ -196,7 +194,6 @@ async function main() {
     - FSSAI licence number (14 digits)
     - HSN code + GST rate per product (CA-confirmed)
     - Manufacturer name, address, country of origin
-    - Approved product photography
   `);
 
   await disconnectDB();

@@ -19,8 +19,7 @@ export default function LoginPage() {
       />
 
       <div className="mx-auto max-w-md px-4 py-14 sm:px-6 sm:py-16">
-        {/* useSearchParams needs a Suspense boundary, otherwise the whole
-            route opts out of static rendering. */}
+
         <Suspense fallback={<div className="panel h-96 rounded-[var(--radius-panel-lg)]" />}>
           <AuthForm mode="login" />
         </Suspense>

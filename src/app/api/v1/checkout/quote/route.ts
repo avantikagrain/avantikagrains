@@ -6,10 +6,6 @@ import { quoteOrder } from '@/services/pricing';
 
 export const dynamic = 'force-dynamic';
 
-/**
- * Checkout preview. Returns exactly the figures that order creation will
- * use, because both call the same pricing service.
- */
 export const POST = route(async (request: NextRequest) => {
   const body = await request.json();
 

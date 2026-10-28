@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState, use } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { ArrowLeft, Package, CheckCircle2, MapPin, CreditCard, ShieldCheck } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
@@ -33,11 +33,11 @@ interface OrderDetail {
   }>;
 }
 
-export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params);
-  const orderId = resolvedParams.id;
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+export default function OrderDetailPage() {
   const router = useRouter();
+  const params = useParams();
+  const orderId = (params?.id as string) || "";
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
 
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);

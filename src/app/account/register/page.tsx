@@ -46,41 +46,38 @@ export default function RegisterPage() {
       return;
     }
 
-    const parts = formData.fullName.split(" ");
-    const first_name = parts[0] || "";
-    const last_name = parts.slice(1).join(" ") || "";
+    const parts = formData.fullName.trim().split(/\s+/);
+    const firstName = parts[0] || "";
+    const lastName = parts.slice(1).join(" ") || "Customer";
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const response = await fetch(`${apiUrl}/api/account/auth/register/`, {
+      const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
-          first_name,
-          last_name,
-          phone: formData.phone
+          firstName,
+          lastName,
+          phone: formData.phone,
         }),
       });
 
       const data = await response.json();
 
-      if (!response.ok) {
-        // Simple error handling
-        const errorMessage = Object.values(data)[0] || "Registration failed. Please try again.";
-        setError(Array.isArray(errorMessage) ? errorMessage[0] : errorMessage);
+      if (!response.ok || !data.success) {
+        setError(data.error || "Registration failed. Please try again.");
         setIsLoading(false);
         return;
       }
 
-      login(data.access, {
+      login(data.token, {
         id: data.user.id,
         email: data.user.email,
-        firstName: data.user.first_name,
-        lastName: data.user.last_name,
+        firstName: data.user.firstName,
+        lastName: data.user.lastName,
         phone: data.user.phone || "",
-        isVerified: false,
+        isVerified: data.user.isVerified ?? true,
       });
 
       router.push("/account");

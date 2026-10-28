@@ -45,20 +45,24 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [items, isInitialized]);
 
+  const MAX_ITEM_QUANTITY = 10;
+
   const addToCart = (product: Product, quantity: number = 1) => {
     setItems((prevItems) => {
       // Use slug as the unique identifier for now
       const existingItem = prevItems.find((item) => item.id === product.slug);
       
       if (existingItem) {
+        const nextQty = Math.min(MAX_ITEM_QUANTITY, existingItem.quantity + quantity);
         return prevItems.map((item) =>
           item.id === product.slug
-            ? { ...item, quantity: item.quantity + quantity }
+            ? { ...item, quantity: nextQty }
             : item
         );
       }
       
-      return [...prevItems, { id: product.slug, product, quantity }];
+      const initialQty = Math.min(MAX_ITEM_QUANTITY, Math.max(1, quantity));
+      return [...prevItems, { id: product.slug, product, quantity: initialQty }];
     });
   };
 
@@ -72,9 +76,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     
+    const cappedQuantity = Math.min(MAX_ITEM_QUANTITY, quantity);
+
     setItems((prevItems) =>
       prevItems.map((item) =>
-        item.id === itemId ? { ...item, quantity } : item
+        item.id === itemId ? { ...item, quantity: cappedQuantity } : item
       )
     );
   };

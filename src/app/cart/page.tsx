@@ -72,7 +72,9 @@ export default function CartPage() {
                         </span>
                         <button 
                           onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="px-3 py-1 text-brand-charcoal/60 hover:bg-brand-charcoal/5 transition-colors"
+                          disabled={item.quantity >= 10}
+                          className="px-3 py-1 text-brand-charcoal/60 hover:bg-brand-charcoal/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                          title={item.quantity >= 10 ? "Maximum limit of 10 reached" : "Increase quantity"}
                         >
                           <Plus className="w-3 h-3" />
                         </button>

@@ -162,10 +162,13 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
                         <button
                           onClick={(e) => {
                             e.preventDefault();
-                            updateQuantity(product.slug, quantityInCart + 1);
+                            if (quantityInCart < 10) {
+                              updateQuantity(product.slug, quantityInCart + 1);
+                            }
                           }}
-                          className="p-2 text-brand-charcoal/70 hover:text-brand-charcoal hover:bg-black/5 transition-colors"
-                          title="Increase quantity"
+                          disabled={quantityInCart >= 10}
+                          className="p-2 text-brand-charcoal/70 hover:text-brand-charcoal hover:bg-black/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                          title={quantityInCart >= 10 ? "Maximum limit of 10 reached" : "Increase quantity"}
                           aria-label="Increase quantity"
                         >
                           <Plus className="w-3.5 h-3.5" />

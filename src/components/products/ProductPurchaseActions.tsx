@@ -105,9 +105,10 @@ export function ProductPurchaseActions({ product }: ProductPurchaseActionsProps)
             </span>
             <button
               type="button"
-              onClick={() => setQuantity((q) => q + 1)}
-              className="p-2 text-brand-charcoal/70 hover:text-brand-charcoal hover:bg-black/5 rounded-lg transition-colors"
-              title="Increase quantity"
+              onClick={() => setQuantity((q) => Math.min(10, q + 1))}
+              disabled={quantity >= 10}
+              className="p-2 text-brand-charcoal/70 hover:text-brand-charcoal hover:bg-black/5 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              title={quantity >= 10 ? "Maximum limit of 10 reached" : "Increase quantity"}
               aria-label="Increase quantity"
             >
               <Plus className="w-4 h-4" />

@@ -7,39 +7,72 @@ import { useAuth } from "@/context/AuthContext";
 import { Package, ArrowRight, ArrowLeft } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
-// Mock data for display purposes
-const mockOrders = [
-  {
-    id: "AVT-2026-00124",
-    date: "23 September 2026",
-    status: "SHIPPED",
-    total: 598,
-    items: [
-      { name: "Pumpkin Seeds", quantity: 2, size: "250 g" },
-      { name: "Moong Dal", quantity: 1, size: "1 KG" }
-    ]
-  },
-  {
-    id: "AVT-2026-00089",
-    date: "12 August 2026",
-    status: "DELIVERED",
-    total: 1250,
-    items: [
-      { name: "Quinoa", quantity: 1, size: "1 KG" },
-      { name: "Premium Pulses Combo", quantity: 1, size: "Combo" }
-    ]
-  }
-];
+interface OrderItem {
+  name: string;
+  quantity: number;
+  packSize?: string;
+  size?: string;
+}
+
+interface OrderDisplay {
+  id: string;
+  date: string;
+  status: string;
+  total: number;
+  items: OrderItem[];
+}
 
 export default function OrdersPage() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const [orders, setOrders] = React.useState<OrderDisplay[]>([]);
+  const [isFetchingOrders, setIsFetchingOrders] = React.useState(true);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push("/account/login");
     }
   }, [isAuthenticated, isLoading, router]);
+
+  useEffect(() => {
+    async function loadOrders() {
+      if (!user?.email) {
+        setIsFetchingOrders(false);
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/orders?email=${encodeURIComponent(user.email)}`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.orders)) {
+          const formatted = data.orders.map((o: any) => ({
+            id: o.orderId || o._id,
+            date: new Date(o.createdAt).toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            }),
+            status: o.orderStatus || "CONFIRMED",
+            total: o.totalAmount || 0,
+            items: (o.items || []).map((item: any) => ({
+              name: item.name,
+              quantity: item.quantity,
+              packSize: item.packSize || "1 KG",
+            })),
+          }));
+          setOrders(formatted);
+        }
+      } catch (err) {
+        console.error("Failed to load user orders:", err);
+      } finally {
+        setIsFetchingOrders(false);
+      }
+    }
+
+    if (isAuthenticated && user?.email) {
+      loadOrders();
+    }
+  }, [isAuthenticated, user?.email]);
 
   if (isLoading || !isAuthenticated) {
     return (
@@ -50,9 +83,10 @@ export default function OrdersPage() {
   }
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (status.toUpperCase()) {
       case "DELIVERED": return "bg-green-100 text-green-800 border-green-200";
       case "SHIPPED": return "bg-blue-100 text-blue-800 border-blue-200";
+      case "CONFIRMED":
       case "PROCESSING": return "bg-yellow-100 text-yellow-800 border-yellow-200";
       default: return "bg-gray-100 text-gray-800 border-gray-200";
     }
@@ -70,8 +104,27 @@ export default function OrdersPage() {
           <p className="text-sm text-brand-charcoal/60">View and track your previous purchases.</p>
         </div>
 
-        <div className="space-y-6">
-          {mockOrders.map((order) => (
+        {isFetchingOrders ? (
+          <div className="py-12 text-center text-brand-charcoal/60 text-sm">
+            Fetching your order history...
+          </div>
+        ) : orders.length === 0 ? (
+          <div className="bg-white border border-[#E9E1D2] rounded-xl p-12 text-center">
+            <Package className="w-12 h-12 text-brand-charcoal/30 mx-auto mb-4" />
+            <h3 className="font-serif text-xl mb-2">No orders placed yet</h3>
+            <p className="text-sm text-brand-charcoal/60 mb-6">
+              You haven&apos;t placed any orders yet. Explore our fresh grains and pulses!
+            </p>
+            <Link
+              href="/products"
+              className="inline-block px-6 py-3 bg-brand-charcoal text-brand-ivory text-xs uppercase tracking-widest font-semibold hover:bg-brand-gold hover:text-brand-charcoal transition-colors rounded"
+            >
+              Browse Products
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {orders.map((order) => (
             <div key={order.id} className="bg-white border border-[#E9E1D2] rounded-xl overflow-hidden hover:shadow-sm transition-shadow">
               
               {/* Order Header */}
@@ -115,16 +168,16 @@ export default function OrdersPage() {
                       </div>
                       <div className="flex-1">
                         <p className="font-medium">{item.name}</p>
-                        <p className="text-xs text-brand-charcoal/60">Pack Size: {item.size} | Qty: {item.quantity}</p>
+                        <p className="text-xs text-brand-charcoal/60">Pack Size: {item.packSize || item.size || "Standard"} | Qty: {item.quantity}</p>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
-              
             </div>
           ))}
         </div>
+      )}
       </div>
     </div>
   );

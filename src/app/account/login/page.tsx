@@ -19,8 +19,7 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const response = await fetch(`${apiUrl}/api/account/auth/login/`, {
+      const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -28,19 +27,19 @@ export default function LoginPage() {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        setError(data.detail || "Invalid email or password.");
+      if (!response.ok || !data.success) {
+        setError(data.error || "Invalid email or password.");
         setIsLoading(false);
         return;
       }
 
-      login(data.access, {
+      login(data.token, {
         id: data.user.id,
         email: data.user.email,
-        firstName: data.user.first_name,
-        lastName: data.user.last_name,
+        firstName: data.user.firstName,
+        lastName: data.user.lastName,
         phone: data.user.phone || "",
-        isVerified: data.user.is_verified || false,
+        isVerified: data.user.isVerified ?? true,
       });
 
       router.push("/account");

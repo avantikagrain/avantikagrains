@@ -75,12 +75,11 @@ export default function QualityPage() {
 
         {/* Certifications Placeholder */}
         <section className="mt-48 text-center border-t border-brand-charcoal/10 pt-24">
-          <h2 className="font-serif text-4xl text-brand-charcoal mb-12 uppercase tracking-wide">Certifications</h2>
+          <h2 className="font-serif text-4xl text-brand-charcoal mb-12 uppercase tracking-wide">Certification</h2>
           <div className="flex justify-center gap-12 flex-wrap opacity-50">
-            {/* Real certification logos would go here via CMS */}
-            <div className="w-24 h-24 bg-brand-charcoal/5 flex items-center justify-center rounded-full text-xs uppercase tracking-wider">ISO</div>
-            <div className="w-24 h-24 bg-brand-charcoal/5 flex items-center justify-center rounded-full text-xs uppercase tracking-wider">FSSAI</div>
-            <div className="w-24 h-24 bg-brand-charcoal/5 flex items-center justify-center rounded-full text-xs uppercase tracking-wider">HACCP</div>
+            <div className="w-28 h-28 bg-brand-charcoal/5 border border-brand-charcoal/10 flex items-center justify-center rounded-full text-sm font-semibold tracking-wider text-brand-charcoal">
+              FSSAI
+            </div>
           </div>
         </section>
       </div>

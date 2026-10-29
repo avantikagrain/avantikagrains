@@ -1,12 +1,30 @@
 import { AnimatedText } from "@/components/shared/AnimatedText";
 
 const qualitySteps = [
-  "RAW MATERIAL INSPECTION",
-  "CLEANING & SORTING",
-  "PROCESS CONTROL",
-  "LAB TESTING",
-  "PACKAGING CHECK",
-  "FINAL QUALITY CONTROL"
+  {
+    title: "RAW MATERIAL INSPECTION",
+    description: "Every crop shipment arriving from partner regional farms across Madhya Pradesh undergoes comprehensive physical and moisture sampling to verify grain purity, kernel integrity, and standard test weight."
+  },
+  {
+    title: "CLEANING & SORTING",
+    description: "Multi-tier pneumatic pre-cleaners, precision gravity separators, and high-resolution optical color sorters remove foreign matter, husk, chaff, and discolored kernels with millimeter precision."
+  },
+  {
+    title: "PROCESS CONTROL",
+    description: "Automated milling lines and cold roller parameters are continuously calibrated to prevent thermal nutrient degradation, retaining the grain's natural germ, dietary fiber, and inherent aroma."
+  },
+  {
+    title: "LAB TESTING",
+    description: "In-house laboratory technicians conduct certified batch assays for gluten index, moisture retention, falling number, ash content, and complete absence of chemical additives or adulterants."
+  },
+  {
+    title: "PACKAGING CHECK",
+    description: "Moisture-barrier, food-grade packaging is inspected for hermetic seal strength, exact volumetric weight tolerance, nitrogen flushing integrity, and clear traceability batch coding."
+  },
+  {
+    title: "FINAL QUALITY CONTROL",
+    description: "Before final dispatch from our Indore milling facility, master lot samples undergo culinary performance audits to guarantee consistent dough elasticity, texture, and taste."
+  }
 ];
 
 export const metadata = {
@@ -45,9 +63,9 @@ export default function QualityPage() {
                 {/* Content Card */}
                 <div className={`w-full pl-12 md:pl-0 md:w-5/12 ${idx % 2 === 0 ? 'md:pr-12 md:text-right' : 'md:pl-12 md:text-left'}`}>
                   <span className="text-brand-gold font-serif text-xl mb-2 block">0{idx + 1}</span>
-                  <h3 className="font-serif text-2xl text-brand-charcoal mb-3">{step}</h3>
+                  <h3 className="font-serif text-2xl text-brand-charcoal mb-3">{step.title}</h3>
                   <p className="text-brand-charcoal/70 text-sm md:text-base leading-relaxed">
-                    [CMS Placeholder] Detailed description of the {step.toLowerCase()} procedures performed at Avantika Grain Mills to ensure consistency and safety.
+                    {step.description}
                   </p>
                 </div>
               </div>

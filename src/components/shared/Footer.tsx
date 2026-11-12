@@ -65,6 +65,7 @@ export function Footer() {
             <Link href="/privacy-policy" className="hover:text-brand-ivory transition-colors">Privacy Policy</Link>
             <Link href="/terms-and-conditions" className="hover:text-brand-ivory transition-colors">Terms & Conditions</Link>
             <Link href="/shipping-policy" className="hover:text-brand-ivory transition-colors">Shipping Policy</Link>
+            <Link href="/cancellation-policy" className="hover:text-brand-ivory transition-colors">Cancellation Policy</Link>
             <Link href="/return-refund-policy" className="hover:text-brand-ivory transition-colors">Return & Refund</Link>
           </div>
         </div>

@@ -5,7 +5,6 @@ import { createCashfreeOrder } from "@/lib/cashfree";
 
 export async function POST(request: Request) {
   try {
-    await connectToDatabase();
     const body = await request.json();
 
     const { customer, shippingAddress, items, totalAmount } = body;
@@ -129,7 +128,7 @@ export async function POST(request: Request) {
     const returnUrl = `${baseUrl}/api/payments/cashfree/callback?order_id={order_id}`;
     const notifyUrl = `${baseUrl}/api/payments/cashfree/webhook`;
 
-    // 1. Create order in Cashfree
+    // 1. Create order in Cashfree FIRST (takes ~200-300ms)
     const cashfreeOrder = await createCashfreeOrder({
       orderId,
       orderAmount: parsedTotal,
@@ -144,39 +143,46 @@ export async function POST(request: Request) {
       notifyUrl,
     });
 
-    // 2. Save order in MongoDB
-    await Order.create({
-      orderId,
-      customer: {
-        name: customerName,
-        email: customerEmail,
-        phone: customerPhone,
-        userId: customer.userId || null,
-      },
-      shippingAddress: {
-        fullName: shippingFullName,
-        phone: shippingPhone,
-        addressLine1,
-        addressLine2: (shippingAddress.addressLine2 || "").trim(),
-        city,
-        state,
-        postalCode: rawPin,
-        country: (shippingAddress.country || "India").trim(),
-      },
-      items: items.map((item: any) => ({
-        id: item.id || item.product?.slug || item.product?.id || `item-${Date.now()}`,
-        name: (item.product?.name || item.name).trim(),
-        packSize: item.product?.packSize || item.packSize || "1 KG",
-        price: Number(item.product?.price || item.price || 0),
-        quantity: Number(item.quantity || 1),
-        image: item.product?.image || item.image || "",
-      })),
-      totalAmount: parsedTotal,
-      currency: "INR",
-      paymentMethod: "ONLINE",
-      paymentStatus: "PENDING",
-      orderStatus: "PROCESSING",
-    });
+    // 2. Persist order in MongoDB (safe non-blocking)
+    try {
+      await connectToDatabase();
+      await Order.create({
+        orderId,
+        customer: {
+          name: customerName,
+          email: customerEmail,
+          phone: customerPhone,
+          userId: customer.userId || null,
+        },
+        shippingAddress: {
+          fullName: shippingFullName,
+          phone: shippingPhone,
+          addressLine1,
+          addressLine2: (shippingAddress.addressLine2 || "").trim(),
+          city,
+          state,
+          postalCode: rawPin,
+          country: (shippingAddress.country || "India").trim(),
+        },
+        items: items.map((item: any) => ({
+          id: item.id || item.product?.slug || item.product?.id || `item-${Date.now()}`,
+          name: (item.product?.name || item.name).trim(),
+          packSize: item.product?.packSize || item.packSize || "1 KG",
+          price: Number(item.product?.price || item.price || 0),
+          quantity: Number(item.quantity || 1),
+          image: item.product?.image || item.image || "",
+        })),
+        totalAmount: parsedTotal,
+        currency: "INR",
+        paymentMethod: "ONLINE",
+        paymentStatus: "PENDING",
+        orderStatus: "PROCESSING",
+      });
+    } catch (dbErr: any) {
+      console.warn("MongoDB pre-save notice:", dbErr.message);
+      // We proceed because the Cashfree order session was created successfully.
+      // When the customer completes payment, callback/webhook will persist the confirmed order.
+    }
 
     return NextResponse.json({
       success: true,
@@ -192,4 +198,3 @@ export async function POST(request: Request) {
     );
   }
 }
-

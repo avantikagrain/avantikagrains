@@ -190,11 +190,25 @@ function CheckoutContent() {
     try {
       if (paymentMethod === "ONLINE") {
         // --- ONLINE PAYMENT VIA CASHFREE ---
-        const response = await fetch("/api/payments/cashfree/create-session", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+        let response: Response;
+        try {
+          response = await fetch("/api/payments/cashfree/create-session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+            signal: controller.signal,
+          });
+        } catch (fetchErr: any) {
+          if (fetchErr.name === "AbortError") {
+            throw new Error("Payment session creation timed out. Please verify your connection and try again.");
+          }
+          throw fetchErr;
+        } finally {
+          clearTimeout(timeoutId);
+        }
 
         const data = await response.json();
 
@@ -259,6 +273,7 @@ function CheckoutContent() {
       console.error("Order submission error:", err);
       setGeneralError(err.message || "An error occurred while saving your order. Please try again.");
       setIsProcessing(false);
+      window.scrollTo({ top: 100, behavior: "smooth" });
     }
   };
 
@@ -655,6 +670,12 @@ function CheckoutContent() {
 
                   {/* Submission Button */}
                   <div className="pt-4">
+                    {generalError && (
+                      <div className="mb-4 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2.5 shadow-sm">
+                        <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
+                        <span className="font-medium">{generalError}</span>
+                      </div>
+                    )}
                     <button
                       type="submit"
                       disabled={isProcessing}

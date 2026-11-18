@@ -1,13 +1,11 @@
 import mongoose from "mongoose";
 import dns from "node:dns";
 
-// Fix for local Windows / Node.js DNS resolver on Indian ISPs refusing SRV queries
-if (process.env.NODE_ENV === "development") {
-  try {
-    dns.setServers(["8.8.8.8", "8.8.4.4", "1.1.1.1"]);
-  } catch {
-    // Ignore in restricted environments
-  }
+// Enable reliable public DNS servers for resolving MongoDB Atlas SRV records
+try {
+  dns.setServers(["8.8.8.8", "8.8.4.4", "1.1.1.1"]);
+} catch {
+  // Ignore in environments where custom DNS is restricted
 }
 
 interface MongooseCache {
@@ -41,6 +39,8 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
+      serverSelectionTimeoutMS: 5000, // Fail fast in 5s rather than hanging for 30s
+      connectTimeoutMS: 5000,
     };
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongooseInstance) => {

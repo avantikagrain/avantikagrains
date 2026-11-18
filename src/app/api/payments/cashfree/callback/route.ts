@@ -16,28 +16,41 @@ export async function GET(request: Request) {
   }
 
   try {
-    await connectToDatabase();
-
-    // Verify order status directly with Cashfree
+    // 1. Verify order status directly with Cashfree
     const cfOrder = await getCashfreeOrder(orderId);
 
     if (cfOrder.order_status === "PAID") {
-      await Order.findOneAndUpdate(
-        { orderId },
-        {
-          paymentStatus: "COMPLETED",
-          orderStatus: "CONFIRMED",
-        }
-      );
+      try {
+        await connectToDatabase();
+        await Order.findOneAndUpdate(
+          { orderId },
+          {
+            $set: {
+              paymentStatus: "COMPLETED",
+              orderStatus: "CONFIRMED",
+            },
+          },
+          { upsert: true, new: true }
+        );
+      } catch (dbErr: any) {
+        console.error("MongoDB order confirmation update notice:", dbErr.message);
+      }
 
       return NextResponse.redirect(`${baseUrl}/order-confirmation?orderId=${encodeURIComponent(orderId)}`);
     } else {
-      await Order.findOneAndUpdate(
-        { orderId },
-        {
-          paymentStatus: "FAILED",
-        }
-      );
+      try {
+        await connectToDatabase();
+        await Order.findOneAndUpdate(
+          { orderId },
+          {
+            $set: {
+              paymentStatus: "FAILED",
+            },
+          }
+        );
+      } catch (dbErr: any) {
+        console.error("MongoDB failed order update notice:", dbErr.message);
+      }
 
       return NextResponse.redirect(
         `${baseUrl}/checkout?error=Payment+could+not+be+completed.+Please+try+again.&orderId=${encodeURIComponent(orderId)}`
@@ -50,4 +63,3 @@ export async function GET(request: Request) {
     );
   }
 }
-

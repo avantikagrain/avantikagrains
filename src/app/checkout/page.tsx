@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Script from "next/script";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { formatCurrency } from "@/lib/utils";
+import { loadCashfreeSDK } from "@/lib/cashfree-client";
 import { ShieldCheck, AlertCircle, ShoppingBag, ArrowLeft, Check, CreditCard, Truck } from "lucide-react";
 
 interface ValidationErrors {
@@ -19,10 +21,11 @@ interface ValidationErrors {
   general?: string;
 }
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, isAuthenticated } = useAuth();
-  const { items, totalPrice } = useCart();
+  const { items, totalPrice, clearCart } = useCart();
   const [isProcessing, setIsProcessing] = useState(false);
   const [generalError, setGeneralError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<ValidationErrors>({});
@@ -42,6 +45,14 @@ export default function CheckoutPage() {
   const [state, setState] = useState("Madhya Pradesh");
   const [postalCode, setPostalCode] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"ONLINE" | "CASH_ON_DELIVERY">("ONLINE");
+
+  // Check for error in query params (e.g. redirected from payment callback)
+  useEffect(() => {
+    const errorParam = searchParams.get("error");
+    if (errorParam) {
+      setGeneralError(decodeURIComponent(errorParam));
+    }
+  }, [searchParams]);
 
   // Sync user details if authenticated
   useEffect(() => {
@@ -177,32 +188,73 @@ export default function CheckoutPage() {
     };
 
     try {
-      const response = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      if (paymentMethod === "ONLINE") {
+        // --- ONLINE PAYMENT VIA CASHFREE ---
+        const response = await fetch("/api/payments/cashfree/create-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (!response.ok || !data.success) {
-        if (data.validationErrors) {
-          // Map backend validation errors back to frontend fields
-          const mappedErrors: ValidationErrors = {};
-          if (data.validationErrors["customer.name"]) mappedErrors.fullName = data.validationErrors["customer.name"];
-          if (data.validationErrors["customer.email"]) mappedErrors.email = data.validationErrors["customer.email"];
-          if (data.validationErrors["customer.phone"]) mappedErrors.phone = data.validationErrors["customer.phone"];
-          if (data.validationErrors["shippingAddress.addressLine1"]) mappedErrors.addressLine1 = data.validationErrors["shippingAddress.addressLine1"];
-          if (data.validationErrors["shippingAddress.city"]) mappedErrors.city = data.validationErrors["shippingAddress.city"];
-          if (data.validationErrors["shippingAddress.state"]) mappedErrors.state = data.validationErrors["shippingAddress.state"];
-          if (data.validationErrors["shippingAddress.postalCode"]) mappedErrors.postalCode = data.validationErrors["shippingAddress.postalCode"];
-          setFieldErrors(mappedErrors);
+        if (!response.ok || !data.success) {
+          if (data.validationErrors) {
+            const mappedErrors: ValidationErrors = {};
+            if (data.validationErrors["customer.name"]) mappedErrors.fullName = data.validationErrors["customer.name"];
+            if (data.validationErrors["customer.email"]) mappedErrors.email = data.validationErrors["customer.email"];
+            if (data.validationErrors["customer.phone"]) mappedErrors.phone = data.validationErrors["customer.phone"];
+            if (data.validationErrors["shippingAddress.addressLine1"]) mappedErrors.addressLine1 = data.validationErrors["shippingAddress.addressLine1"];
+            if (data.validationErrors["shippingAddress.city"]) mappedErrors.city = data.validationErrors["shippingAddress.city"];
+            if (data.validationErrors["shippingAddress.state"]) mappedErrors.state = data.validationErrors["shippingAddress.state"];
+            if (data.validationErrors["shippingAddress.postalCode"]) mappedErrors.postalCode = data.validationErrors["shippingAddress.postalCode"];
+            setFieldErrors(mappedErrors);
+          }
+          throw new Error(data.error || "Failed to initialize payment gateway.");
         }
-        throw new Error(data.error || "Failed to process order. Please verify your details.");
-      }
 
-      // Success: Route to order confirmation with real MongoDB orderId
-      router.push(`/order-confirmation?orderId=${data.orderId}`);
+        // Initialize Cashfree JS SDK
+        const Cashfree = await loadCashfreeSDK();
+        const cfEnv = (process.env.NEXT_PUBLIC_CASHFREE_ENV || "production").toLowerCase();
+        const cashfree = Cashfree({
+          mode: cfEnv === "sandbox" || cfEnv === "test" ? "sandbox" : "production",
+        });
+
+        // Launch Cashfree checkout (redirectTarget: "_self" redirects in place to Cashfree)
+        await cashfree.checkout({
+          paymentSessionId: data.paymentSessionId,
+          redirectTarget: "_self",
+        });
+        return;
+      } else {
+        // --- CASH ON DELIVERY (COD) ---
+        const response = await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          if (data.validationErrors) {
+            const mappedErrors: ValidationErrors = {};
+            if (data.validationErrors["customer.name"]) mappedErrors.fullName = data.validationErrors["customer.name"];
+            if (data.validationErrors["customer.email"]) mappedErrors.email = data.validationErrors["customer.email"];
+            if (data.validationErrors["customer.phone"]) mappedErrors.phone = data.validationErrors["customer.phone"];
+            if (data.validationErrors["shippingAddress.addressLine1"]) mappedErrors.addressLine1 = data.validationErrors["shippingAddress.addressLine1"];
+            if (data.validationErrors["shippingAddress.city"]) mappedErrors.city = data.validationErrors["shippingAddress.city"];
+            if (data.validationErrors["shippingAddress.state"]) mappedErrors.state = data.validationErrors["shippingAddress.state"];
+            if (data.validationErrors["shippingAddress.postalCode"]) mappedErrors.postalCode = data.validationErrors["shippingAddress.postalCode"];
+            setFieldErrors(mappedErrors);
+          }
+          throw new Error(data.error || "Failed to process order. Please verify your details.");
+        }
+
+        // Clear cart and redirect to confirmation
+        clearCart();
+        router.push(`/order-confirmation?orderId=${data.orderId}`);
+      }
     } catch (err: any) {
       console.error("Order submission error:", err);
       setGeneralError(err.message || "An error occurred while saving your order. Please try again.");
@@ -235,6 +287,9 @@ export default function CheckoutPage() {
 
   return (
     <div data-header-theme="light" className="min-h-screen pt-32 pb-24 bg-[#FAF7F2] text-brand-charcoal">
+      {/* Preload Cashfree JS SDK */}
+      <Script src="https://sdk.cashfree.com/js/v3/cashfree.js" strategy="afterInteractive" />
+
       <div className="container mx-auto px-6 md:px-12 max-w-5xl">
         <div className="mb-8">
           <Link
@@ -254,7 +309,7 @@ export default function CheckoutPage() {
           <div className="mb-8 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-start gap-3 shadow-sm">
             <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-red-600" />
             <div>
-              <p className="font-semibold">Unable to place order</p>
+              <p className="font-semibold">Payment or Order Notice</p>
               <p className="text-xs mt-0.5">{generalError}</p>
             </div>
           </div>
@@ -284,7 +339,7 @@ export default function CheckoutPage() {
                   <button
                     type="button"
                     onClick={() => setCheckoutMode("guest")}
-                    className="p-5 border border-brand-gold bg-brand-gold/5 rounded-xl flex flex-col items-center justify-center text-center hover:bg-brand-gold hover:text-brand-charcoal transition-colors group"
+                    className="p-5 border border-brand-gold bg-brand-gold/5 rounded-xl flex flex-col items-center justify-center text-center hover:bg-brand-gold hover:text-brand-charcoal transition-colors group cursor-pointer"
                   >
                     <span className="font-semibold text-sm uppercase tracking-widest mb-1">Guest Checkout</span>
                     <span className="text-xs text-brand-charcoal/60 group-hover:text-brand-charcoal transition-colors">
@@ -311,7 +366,7 @@ export default function CheckoutPage() {
                     <button
                       type="button"
                       onClick={() => setCheckoutMode(null)}
-                      className="text-xs uppercase tracking-widest text-brand-gold hover:underline font-semibold"
+                      className="text-xs uppercase tracking-widest text-brand-gold hover:underline font-semibold cursor-pointer"
                     >
                       Change Mode
                     </button>
@@ -558,12 +613,12 @@ export default function CheckoutPage() {
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-xs font-bold uppercase tracking-wider text-brand-charcoal">
-                              Paytm / UPI / Cards
+                              Cashfree Payments (UPI / Cards / Netbanking)
                             </span>
                             <CreditCard className="w-4 h-4 text-brand-gold" />
                           </div>
                           <p className="text-[11px] text-brand-charcoal/60 leading-relaxed">
-                            Pay securely via Paytm gateway, UPI (Google Pay/PhonePe), or Netbanking.
+                            Pay securely via UPI (Google Pay, PhonePe, Paytm), Debit/Credit Cards, or Netbanking.
                           </p>
                         </div>
                       </label>
@@ -674,7 +729,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex items-center gap-2 pt-2 border-t border-brand-charcoal/5 text-[11px] text-brand-charcoal/50">
                   <ShieldCheck className="w-4 h-4 text-brand-gold shrink-0" />
-                  <span>SSL Encrypted & MongoDB Verified</span>
+                  <span>Cashfree Secured • SSL Encrypted</span>
                 </div>
               </div>
             </div>
@@ -682,5 +737,19 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense
+      fallback={
+        <div data-header-theme="light" className="min-h-screen pt-32 pb-24 bg-[#FAF7F2] flex items-center justify-center">
+          <p className="text-xs uppercase tracking-widest text-brand-charcoal/60">Loading checkout...</p>
+        </div>
+      }
+    >
+      <CheckoutContent />
+    </Suspense>
   );
 }

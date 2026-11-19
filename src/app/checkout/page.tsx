@@ -8,7 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { formatCurrency } from "@/lib/utils";
 import { loadCashfreeSDK } from "@/lib/cashfree-client";
-import { ShieldCheck, AlertCircle, ShoppingBag, ArrowLeft, Check, CreditCard, Truck } from "lucide-react";
+import { ShieldCheck, AlertCircle, ShoppingBag, ArrowLeft, Check, CreditCard, Truck, Globe } from "lucide-react";
 
 interface ValidationErrors {
   fullName?: string;
@@ -29,7 +29,7 @@ function CheckoutContent() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [generalError, setGeneralError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<ValidationErrors>({});
-  
+
   // Checkout mode: "auth" for logged in, "guest" for non-logged in, null for initial choice
   const [checkoutMode, setCheckoutMode] = useState<"guest" | "auth" | null>(
     isAuthenticated ? "auth" : null
@@ -44,7 +44,7 @@ function CheckoutContent() {
   const [city, setCity] = useState("Indore");
   const [state, setState] = useState("Madhya Pradesh");
   const [postalCode, setPostalCode] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"ONLINE" | "CASH_ON_DELIVERY">("ONLINE");
+  const [paymentMethod, setPaymentMethod] = useState<"ONLINE" | "PAYGLOCAL" | "CASH_ON_DELIVERY">("ONLINE");
 
   // Check for error in query params (e.g. redirected from payment callback)
   useEffect(() => {
@@ -240,6 +240,51 @@ function CheckoutContent() {
           redirectTarget: "_self",
         });
         return;
+      } else if (paymentMethod === "PAYGLOCAL") {
+        // --- INTERNATIONAL & GLOBAL PAYMENT VIA PAYGLOCAL ---
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+        let response: Response;
+        try {
+          response = await fetch("/api/payments/payglocal/create-session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+            signal: controller.signal,
+          });
+        } catch (fetchErr: any) {
+          if (fetchErr.name === "AbortError") {
+            throw new Error("PayGlocal session creation timed out. Please try again.");
+          }
+          throw fetchErr;
+        } finally {
+          clearTimeout(timeoutId);
+        }
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          if (data.validationErrors) {
+            const mappedErrors: ValidationErrors = {};
+            if (data.validationErrors["customer.name"]) mappedErrors.fullName = data.validationErrors["customer.name"];
+            if (data.validationErrors["customer.email"]) mappedErrors.email = data.validationErrors["customer.email"];
+            if (data.validationErrors["customer.phone"]) mappedErrors.phone = data.validationErrors["customer.phone"];
+            if (data.validationErrors["shippingAddress.addressLine1"]) mappedErrors.addressLine1 = data.validationErrors["shippingAddress.addressLine1"];
+            if (data.validationErrors["shippingAddress.city"]) mappedErrors.city = data.validationErrors["shippingAddress.city"];
+            if (data.validationErrors["shippingAddress.state"]) mappedErrors.state = data.validationErrors["shippingAddress.state"];
+            if (data.validationErrors["shippingAddress.postalCode"]) mappedErrors.postalCode = data.validationErrors["shippingAddress.postalCode"];
+            setFieldErrors(mappedErrors);
+          }
+          throw new Error(data.error || "Failed to initialize PayGlocal payment gateway.");
+        }
+
+        if (data.redirectUrl) {
+          window.location.href = data.redirectUrl;
+          return;
+        } else {
+          throw new Error("No redirection URL received from PayGlocal.");
+        }
       } else {
         // --- CASH ON DELIVERY (COD) ---
         const response = await fetch("/api/orders", {
@@ -402,9 +447,8 @@ function CheckoutContent() {
                           setFullName(e.target.value);
                           if (fieldErrors.fullName) setFieldErrors((prev) => ({ ...prev, fullName: undefined }));
                         }}
-                        className={`w-full border-b py-2 text-sm bg-transparent focus:outline-none transition-colors ${
-                          fieldErrors.fullName ? "border-red-500 text-red-900" : "border-brand-charcoal/20 focus:border-brand-gold"
-                        }`}
+                        className={`w-full border-b py-2 text-sm bg-transparent focus:outline-none transition-colors ${fieldErrors.fullName ? "border-red-500 text-red-900" : "border-brand-charcoal/20 focus:border-brand-gold"
+                          }`}
                         placeholder="e.g. Ramesh Patel"
                         required
                       />
@@ -427,9 +471,8 @@ function CheckoutContent() {
                           setEmail(e.target.value);
                           if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: undefined }));
                         }}
-                        className={`w-full border-b py-2 text-sm bg-transparent focus:outline-none transition-colors ${
-                          fieldErrors.email ? "border-red-500 text-red-900" : "border-brand-charcoal/20 focus:border-brand-gold"
-                        }`}
+                        className={`w-full border-b py-2 text-sm bg-transparent focus:outline-none transition-colors ${fieldErrors.email ? "border-red-500 text-red-900" : "border-brand-charcoal/20 focus:border-brand-gold"
+                          }`}
                         placeholder="e.g. ramesh@example.com"
                         required
                       />
@@ -458,9 +501,8 @@ function CheckoutContent() {
                             setPhone(val);
                             if (fieldErrors.phone) setFieldErrors((prev) => ({ ...prev, phone: undefined }));
                           }}
-                          className={`w-full border-b py-2 text-sm bg-transparent focus:outline-none transition-colors ${
-                            fieldErrors.phone ? "border-red-500 text-red-900" : "border-brand-charcoal/20 focus:border-brand-gold"
-                          }`}
+                          className={`w-full border-b py-2 text-sm bg-transparent focus:outline-none transition-colors ${fieldErrors.phone ? "border-red-500 text-red-900" : "border-brand-charcoal/20 focus:border-brand-gold"
+                            }`}
                           placeholder="9876543210"
                           required
                         />
@@ -492,9 +534,8 @@ function CheckoutContent() {
                             setAddressLine1(e.target.value);
                             if (fieldErrors.addressLine1) setFieldErrors((prev) => ({ ...prev, addressLine1: undefined }));
                           }}
-                          className={`w-full border-b py-2 text-sm bg-transparent focus:outline-none transition-colors ${
-                            fieldErrors.addressLine1 ? "border-red-500 text-red-900" : "border-brand-charcoal/20 focus:border-brand-gold"
-                          }`}
+                          className={`w-full border-b py-2 text-sm bg-transparent focus:outline-none transition-colors ${fieldErrors.addressLine1 ? "border-red-500 text-red-900" : "border-brand-charcoal/20 focus:border-brand-gold"
+                            }`}
                           placeholder="e.g. 104, Shreemad Residency, Race Course Road"
                           required
                         />
@@ -531,9 +572,8 @@ function CheckoutContent() {
                               setCity(e.target.value);
                               if (fieldErrors.city) setFieldErrors((prev) => ({ ...prev, city: undefined }));
                             }}
-                            className={`w-full border-b py-2 text-sm bg-transparent focus:outline-none transition-colors ${
-                              fieldErrors.city ? "border-red-500 text-red-900" : "border-brand-charcoal/20 focus:border-brand-gold"
-                            }`}
+                            className={`w-full border-b py-2 text-sm bg-transparent focus:outline-none transition-colors ${fieldErrors.city ? "border-red-500 text-red-900" : "border-brand-charcoal/20 focus:border-brand-gold"
+                              }`}
                             placeholder="e.g. Indore"
                             required
                           />
@@ -556,9 +596,8 @@ function CheckoutContent() {
                               setState(e.target.value);
                               if (fieldErrors.state) setFieldErrors((prev) => ({ ...prev, state: undefined }));
                             }}
-                            className={`w-full border-b py-2 text-sm bg-transparent focus:outline-none transition-colors ${
-                              fieldErrors.state ? "border-red-500 text-red-900" : "border-brand-charcoal/20 focus:border-brand-gold"
-                            }`}
+                            className={`w-full border-b py-2 text-sm bg-transparent focus:outline-none transition-colors ${fieldErrors.state ? "border-red-500 text-red-900" : "border-brand-charcoal/20 focus:border-brand-gold"
+                              }`}
                             placeholder="e.g. Madhya Pradesh"
                             required
                           />
@@ -583,9 +622,8 @@ function CheckoutContent() {
                               setPostalCode(val);
                               if (fieldErrors.postalCode) setFieldErrors((prev) => ({ ...prev, postalCode: undefined }));
                             }}
-                            className={`w-full border-b py-2 text-sm bg-transparent focus:outline-none transition-colors ${
-                              fieldErrors.postalCode ? "border-red-500 text-red-900" : "border-brand-charcoal/20 focus:border-brand-gold"
-                            }`}
+                            className={`w-full border-b py-2 text-sm bg-transparent focus:outline-none transition-colors ${fieldErrors.postalCode ? "border-red-500 text-red-900" : "border-brand-charcoal/20 focus:border-brand-gold"
+                              }`}
                             placeholder="452001"
                             required
                           />
@@ -609,7 +647,7 @@ function CheckoutContent() {
                       <h3 className="font-serif text-xl">Select Payment Method</h3>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <label
                         className={`p-4 border rounded-xl flex items-start gap-3 cursor-pointer transition-all ${
                           paymentMethod === "ONLINE"
@@ -628,12 +666,40 @@ function CheckoutContent() {
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-xs font-bold uppercase tracking-wider text-brand-charcoal">
-                              Cashfree Payments (UPI / Cards / Netbanking)
+                              Cashfree
                             </span>
                             <CreditCard className="w-4 h-4 text-brand-gold" />
                           </div>
                           <p className="text-[11px] text-brand-charcoal/60 leading-relaxed">
-                            Pay securely via UPI (Google Pay, PhonePe, Paytm), Debit/Credit Cards, or Netbanking.
+                            UPI (GPay/PhonePe), Indian Cards, Netbanking.
+                          </p>
+                        </div>
+                      </label>
+
+                      <label
+                        className={`p-4 border rounded-xl flex items-start gap-3 cursor-pointer transition-all ${
+                          paymentMethod === "PAYGLOCAL"
+                            ? "border-brand-gold bg-brand-gold/10 ring-1 ring-brand-gold"
+                            : "border-brand-charcoal/20 hover:border-brand-gold/50"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="PAYGLOCAL"
+                          checked={paymentMethod === "PAYGLOCAL"}
+                          onChange={() => setPaymentMethod("PAYGLOCAL")}
+                          className="accent-brand-gold mt-1"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-bold uppercase tracking-wider text-brand-charcoal">
+                              PayGlocal
+                            </span>
+                            <Globe className="w-4 h-4 text-brand-gold" />
+                          </div>
+                          <p className="text-[11px] text-brand-charcoal/60 leading-relaxed">
+                            International Cards (Visa, Mastercard, Global).
                           </p>
                         </div>
                       </label>
@@ -656,12 +722,12 @@ function CheckoutContent() {
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-xs font-bold uppercase tracking-wider text-brand-charcoal">
-                              Cash on Delivery (COD)
+                              Cash on Delivery
                             </span>
                             <Truck className="w-4 h-4 text-brand-charcoal/60" />
                           </div>
                           <p className="text-[11px] text-brand-charcoal/60 leading-relaxed">
-                            Pay in cash when your farm-fresh grain batch is delivered to your doorstep.
+                            Pay in cash when grain batch is delivered.
                           </p>
                         </div>
                       </label>
@@ -686,7 +752,9 @@ function CheckoutContent() {
                       ) : (
                         <span>
                           {paymentMethod === "ONLINE"
-                            ? `Pay Now • ${formatCurrency(totalPrice, "INR")}`
+                            ? `Pay via Cashfree • ${formatCurrency(totalPrice, "INR")}`
+                            : paymentMethod === "PAYGLOCAL"
+                            ? `Pay via PayGlocal • ${formatCurrency(totalPrice, "INR")}`
                             : `Confirm Order (Cash on Delivery) • ${formatCurrency(totalPrice, "INR")}`}
                         </span>
                       )}
